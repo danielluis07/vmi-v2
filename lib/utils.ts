@@ -1,5 +1,7 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -66,3 +68,53 @@ export const formatPostalCode = (value: string): string => {
   const digits = value.replace(/\D/g, "").slice(0, 8);
   return digits.replace(/(\d{5})(\d{1,3})/, "$1-$2");
 };
+
+export const formatDate = (date: Date | undefined) => {
+  return date
+    ? format(date, "dd/MM/yyyy", { locale: ptBR })
+    : "Data não definida";
+};
+
+export const formatTime = (time: Date | undefined) => {
+  return time ? format(time, "HH:mm", { locale: ptBR }) : "Hora não definida";
+};
+
+export const getFormattedDateTime = (
+  date: Date | undefined,
+  time: Date | undefined
+) => {
+  if (!date || !time) return "Data e hora não definida";
+  const finalDateTime = new Date(date); // Copy date
+  finalDateTime.setHours(time.getHours(), time.getMinutes(), 0, 0); // Merge time
+  return format(finalDateTime, "HH:mm", { locale: ptBR });
+};
+
+export const states = [
+  "Acre",
+  "Alagoas",
+  "Amapá",
+  "Amazonas",
+  "Bahia",
+  "Ceará",
+  "Distrito Federal",
+  "Espírito Santo",
+  "Goiás",
+  "Maranhão",
+  "Mato Grosso",
+  "Mato Grosso do Sul",
+  "Minas Gerais",
+  "Pará",
+  "Paraíba",
+  "Paraná",
+  "Pernambuco",
+  "Piauí",
+  "Rio de Janeiro",
+  "Rio Grande do Norte",
+  "Rio Grande do Sul",
+  "Rondônia",
+  "Roraima",
+  "Santa Catarina",
+  "São Paulo",
+  "Sergipe",
+  "Tocantins",
+];

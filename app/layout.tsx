@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
-import { DM_Sans } from "next/font/google";
+import { Inter } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { TRPCProvider } from "@/trpc/client";
+import { ReactScan } from "@/components/react-scan-component";
 
-const dmSans = DM_Sans({
-  variable: "--font-dm-sans",
+const inter = Inter({
+  variable: "--font-inter",
   subsets: ["latin"],
 });
 
@@ -20,9 +22,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${dmSans.variable} antialiased`}>
-        {children}
-        <Toaster />
+      <ReactScan />
+      <body className={`${inter.variable} antialiased max-w-[1536px] mx-auto`}>
+        <TRPCProvider>
+          <Toaster />
+          {children}
+        </TRPCProvider>
       </body>
     </html>
   );

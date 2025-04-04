@@ -28,11 +28,13 @@ import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import Link from "next/link";
 import { formatCnpj, formatCpf, removeFormatting } from "@/lib/utils";
+import { useRouter } from "next/navigation";
 
 type FormData = z.infer<typeof signUpSchema>;
 
 export const SignUpForm = () => {
   const [loading, setLoading] = useState<boolean>(false);
+  const router = useRouter();
   const form = useForm<FormData>({
     resolver: zodResolver(signUpSchema),
     defaultValues: {
@@ -58,14 +60,13 @@ export const SignUpForm = () => {
         name: values.name, // user display name
         role: values.role, // user role
         cpfCnpj: cleanCpfCnpj, // user cpf or cnpj
-        callbackURL: "/dashboard", // a url to redirect to after the user verifies their email (optional)
       },
       {
         onRequest: () => {
           setLoading(true);
         },
         onSuccess: () => {
-          setLoading(false);
+          router.push("/dashboard");
         },
         onError: (ctx) => {
           // display the error message

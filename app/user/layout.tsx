@@ -1,8 +1,8 @@
-import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
-import { UserSidebar } from "@/components/user/sidebar/user-sidebar";
+import { SidebarProvider } from "@/components/ui/sidebar";
+import { ProducerSidebar } from "@/components/producer/sidebar/producer-sidebar";
 import { cookies } from "next/headers";
 
-export default async function DashboardLayout({
+export default async function UserDashboardLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -11,9 +11,8 @@ export default async function DashboardLayout({
   const defaultOpen = cookieStore.get("sidebar:state")?.value === "true";
   return (
     <SidebarProvider defaultOpen={defaultOpen}>
-      <UserSidebar />
+      <ProducerSidebar />
       <main className="w-full">
-        <SidebarTrigger />
         <div className="p-5 w-11/12 mx-auto">{children}</div>
       </main>
     </SidebarProvider>

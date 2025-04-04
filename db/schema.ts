@@ -5,11 +5,45 @@ import {
   boolean,
   varchar,
   pgEnum,
+  integer,
 } from "drizzle-orm/pg-core";
 
 export const userRole = pgEnum("user_role", ["ADMIN", "USER", "PRODUCER"]);
 
-export const user = pgTable("user", {
+export const ticketStatus = pgEnum("ticket_status", [
+  "AVAILABLE",
+  "SOLD",
+  "CANCELLED",
+]);
+
+export const ticketGender = pgEnum("ticket_gender", [
+  "MALE",
+  "FEMALE",
+  "UNISEX",
+]);
+
+export const paymentStatus = pgEnum("payment_status", [
+  "PENDING",
+  "PAID",
+  "CANCELLED",
+]);
+
+export const eventStatus = pgEnum("event_status", [
+  "ACTIVE",
+  "INACTIVE",
+  "ENDED",
+]);
+
+export const eventMode = pgEnum("event_mode", ["ONLINE", "IN_PERSON"]);
+
+export const eventCreatorRole = pgEnum("event_creator_role", [
+  "USER",
+  "PRODUCER",
+]);
+
+// tables
+
+export const users = pgTable("user", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
@@ -37,7 +71,7 @@ export const session = pgTable("session", {
   userAgent: text("user_agent"),
   userId: text("user_id")
     .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
+    .references(() => users.id, { onDelete: "cascade" }),
 });
 
 export const account = pgTable("account", {
@@ -48,7 +82,7 @@ export const account = pgTable("account", {
   providerId: text("provider_id").notNull(),
   userId: text("user_id")
     .notNull()
-    .references(() => user.id, { onDelete: "cascade" }),
+    .references(() => users.id, { onDelete: "cascade" }),
   accessToken: text("access_token"),
   refreshToken: text("refresh_token"),
   idToken: text("id_token"),
@@ -69,4 +103,135 @@ export const verification = pgTable("verification", {
   expiresAt: timestamp("expires_at").notNull(),
   createdAt: timestamp("created_at"),
   updatedAt: timestamp("updated_at"),
+});
+
+export const categories = pgTable("categories", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const ticketSectors = pgTable("ticket_sectors", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  name: text("name").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const events = pgTable("events", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  categoryId: text("category_id").references(() => categories.id, {
+    onDelete: "set null",
+  }),
+  title: text("title").notNull(),
+  description: text("description"),
+  image: text("image").notNull(),
+  status: eventStatus("status"),
+  mode: eventMode("mode").notNull(),
+  city: text("city"),
+  province: text("province"),
+  address: text("address"),
+  uf: text("uf"),
+  date: timestamp("date", { withTimezone: true }),
+  map: text("map"),
+  creatorRole: eventCreatorRole("creator_role"),
+  organizerId: text("organizer_id").references(() => users.id, {
+    onDelete: "cascade",
+  }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const producerEvents = pgTable("producer_events", {
+  eventId: text("event_id")
+    .primaryKey()
+    .references(() => events.id, { onDelete: "cascade" }),
+  producerName: text("producer_name").notNull(),
+  showProducer: boolean("show_producer").default(false),
+  producerDescription: text("producer_description"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const eventDays = pgTable("event_days", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  eventId: text("event_id").references(() => producerEvents.eventId, {
+    onDelete: "cascade",
+  }),
+  date: timestamp("date", { withTimezone: true }).notNull(),
+  startTime: timestamp("start_time", { withTimezone: true }).notNull(),
+  endTime: timestamp("end_time", { withTimezone: true }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const batches = pgTable("batches", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  eventId: text("event_id").references(() => events.id, {
+    onDelete: "cascade",
+  }),
+  name: text("name").notNull(),
+  startTime: timestamp("start_time", { withTimezone: true }),
+  endTime: timestamp("end_time", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
+});
+
+export const tickets = pgTable("tickets", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  eventId: text("event_id").references(() => events.id, {
+    onDelete: "cascade",
+  }),
+  batchId: text("batch_id").references(() => batches.id, {
+    onDelete: "cascade",
+  }),
+  buyerId: text("buyer_id").references(() => users.id, {
+    onDelete: "set null",
+  }),
+  price: integer("price").notNull(),
+  isNominal: boolean("is_nominal").default(false).notNull(),
+  gender: ticketGender("gender"),
+  status: ticketStatus("status"),
+  purchaseDate: timestamp("purchase_date", { withTimezone: true }),
+  quantity: integer("quantity").notNull(),
+  sectorId: text("sector_id").references(() => ticketSectors.id, {
+    onDelete: "set null",
+  }),
+  obs: text("obs"),
+  qrCode: text("qr_code").unique(),
+  file: text("file").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
+});
+
+export const ticketPurchases = pgTable("ticket_purchases", {
+  id: text("id")
+    .primaryKey()
+    .$defaultFn(() => crypto.randomUUID()),
+  userId: text("user_id")
+    .notNull()
+    .references(() => users.id, { onDelete: "cascade" }),
+  eventId: text("event_id")
+    .notNull()
+    .references(() => events.id, { onDelete: "cascade" }),
+  ticketId: text("ticket_id")
+    .notNull()
+    .references(() => tickets.id, { onDelete: "cascade" }),
+  purchaseDate: timestamp("purchase_date", { withTimezone: true }).defaultNow(),
+  paymentStatus: paymentStatus("payment_status"),
+  paymentMethod: text("payment_method"),
+  totalPrice: integer("total_price").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
 });

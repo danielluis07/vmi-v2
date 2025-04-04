@@ -27,10 +27,12 @@ import {
 import { signInSchema } from "@/schemas";
 import { getErrorMessage } from "@/lib/auth-client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type FormData = z.infer<typeof signInSchema>;
 
 export const SignInForm = () => {
+  const { signIn, getSession } = authClient;
   const [loading, setLoading] = useState<boolean>(false);
   const form = useForm<FormData>({
     resolver: zodResolver(signInSchema),
@@ -40,20 +42,32 @@ export const SignInForm = () => {
     },
   });
 
+  const router = useRouter();
+
   const onInvalid = (errors: FieldErrors<FormData>) => {
     console.log(errors);
   };
 
   const onSubmit = async (values: FormData) => {
-    await authClient.signIn.email(
+    await signIn.email(
       {
         email: values.email,
         password: values.password,
-        callbackURL: "/dashboard",
       },
       {
         onRequest: () => {
           setLoading(true);
+        },
+        onSuccess: async () => {
+          const session = await getSession();
+
+          if (!session.data?.user) {
+            toast.error("Usuário não encontrado");
+            setLoading(false);
+            return;
+          }
+
+          router.push(`/${session.data.user.role.toLowerCase()}`);
         },
         onError: (ctx) => {
           toast.error(getErrorMessage(ctx.error.code, "ptBr"));

@@ -1,7 +1,7 @@
 import { auth } from "@/lib/auth";
 import { headers } from "next/headers";
 
-const DashboardPage = async () => {
+const ProducerPage = async () => {
   const session = await auth.api.getSession({
     headers: await headers(),
   });
@@ -15,4 +15,4 @@ const DashboardPage = async () => {
   );
 };
 
-export default DashboardPage;
+export default ProducerPage;

@@ -1,15 +1,27 @@
+import { auth } from "@/lib/auth";
 import { NextRequest, NextResponse } from "next/server";
-import { getSessionCookie } from "better-auth/cookies";
 
 export async function middleware(request: NextRequest) {
-  const sessionCookie = getSessionCookie(request); // Optionally pass config as the second argument if cookie name or prefix is customized.
+  const session = await auth.api.getSession({ headers: request.headers });
 
-  if (!sessionCookie) {
+  if (!session) {
     return NextResponse.redirect(new URL("/auth/sign-in", request.url));
   }
+
+  const pathname = request.nextUrl.pathname;
+  const role = session.user.role;
+
+  if (pathname.startsWith("/user") && role !== "USER") {
+    return NextResponse.redirect(new URL("/producer", request.url));
+  }
+
+  if (pathname.startsWith("/producer") && role !== "PRODUCER") {
+    return NextResponse.redirect(new URL("/user", request.url));
+  }
+
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/dashboard/:path*"], // Only protect dashboard routes
+  matcher: ["/user/:path*", "/producer/:path*"],
 };
