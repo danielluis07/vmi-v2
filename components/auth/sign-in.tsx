@@ -28,6 +28,7 @@ import { signInSchema } from "@/schemas";
 import { getErrorMessage } from "@/lib/auth-client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 type FormData = z.infer<typeof signInSchema>;
 
@@ -132,7 +133,11 @@ export const SignInForm = () => {
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="justify-center text-sm gap-1">
+      <CardFooter
+        className={cn(
+          loading && "pointer-events-none",
+          "justify-center text-sm gap-1"
+        )}>
         Não possui uma conta?{" "}
         <Link href="/auth/sign-up" className="underline underline-offset-4">
           Cadastre-se

@@ -33,9 +33,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import ImageUploader from "@/components/producer/events/image-uploader";
 import {
   formatCurrency,
+  formatCurrencyFromCents,
   formatDate,
   getFormattedDateTime,
   states,
@@ -60,8 +60,9 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { uploadFile } from "@/actions/upload-file";
-import { FileUploader } from "@/components/ui/file-uploader";
+import { FileInput, FileUploader } from "@/components/ui/file-uploader";
 import { DropzoneOptions } from "react-dropzone";
+import { MapUploader } from "@/components/producer/events/map-uploader";
 
 type FormData = z.infer<typeof createProducerEventSchema>;
 
@@ -77,7 +78,8 @@ export const NewEventsForm = () => {
     { label: "Online", value: "ONLINE" },
   ];
 
-  const { step, setStep } = useMultiStepFormStore();
+  const { step, setStep, image, imagePreviewUrl, setImage, clearImage } =
+    useMultiStepFormStore();
   const form = useForm<FormData>({
     resolver: zodResolver(createProducerEventSchema),
     defaultValues: {
@@ -117,6 +119,15 @@ export const NewEventsForm = () => {
       ],
     },
   });
+
+  const dropzone = {
+    accept: {
+      "image/*": [".jpg", ".jpeg", ".png"],
+    },
+    multiple: false,
+    maxFiles: 1,
+    maxSize: 1024 * 1024 * 5,
+  } satisfies DropzoneOptions;
 
   const create = trpc.producerEvents.create.useMutation({
     onSuccess: () => {
@@ -226,15 +237,6 @@ export const NewEventsForm = () => {
 
   const { control } = form;
 
-  const dropzone = {
-    accept: {
-      "image/*": [".jpg", ".jpeg", ".png"],
-    },
-    multiple: false,
-    maxFiles: 1,
-    maxSize: 1 * 1024 * 1024,
-  } satisfies DropzoneOptions;
-
   const {
     fields: days,
     append: addDay,
@@ -246,7 +248,7 @@ export const NewEventsForm = () => {
 
   return (
     <div className="w-full flex">
-      <div className="">
+      <div>
         <Button
           type="button"
           className="sticky left-0 top-1/2 transform -translate-y-1/2 pointer-events-auto z-50"
@@ -269,11 +271,20 @@ export const NewEventsForm = () => {
                   <FormLabel>Banner do Evento</FormLabel>
                   <FormControl>
                     <FileUploader
-                      value={field.value ? [field.value as File] : null}
-                      onValueChange={(files) =>
-                        field.onChange(files?.[0] ?? null)
-                      }
-                      dropzoneOptions={dropzone}></FileUploader>
+                      value={image ? [image] : null}
+                      onValueChange={(file) => {
+                        if (file) {
+                          field.onChange(file?.[0] ?? null);
+                          setImage(file?.[0] ?? null);
+                        } else {
+                          clearImage();
+                        }
+                      }}
+                      dropzoneOptions={dropzone}>
+                      <FileInput className="h-64" previewurl={imagePreviewUrl}>
+                        Arraste ou clique para selecionar uma imagem
+                      </FileInput>
+                    </FileUploader>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -657,7 +668,7 @@ export const NewEventsForm = () => {
                       <FormItem>
                         <FormLabel>Mapa do Evento</FormLabel>
                         <FormControl>
-                          <ImageUploader
+                          <MapUploader
                             onImageSelect={(file) => field.onChange(file)}
                             imagePreview={
                               field.value instanceof File
@@ -782,42 +793,53 @@ export const NewEventsForm = () => {
                                   </p>
 
                                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    {batch.tickets.map((ticket, ticketIdx) => (
-                                      <div
-                                        key={ticketIdx}
-                                        className="border border-dashed rounded-md space-y-1 p-3 bg-gray-50">
-                                        <div className="flex items-center gap-2 mb-1">
-                                          <Ticket className="w-4 h-4 text-secondary" />
-                                          <span className="text-sm font-medium text-gray-700">
-                                            Ingresso {ticketIdx + 1}
-                                          </span>
-                                        </div>
+                                    {batch.tickets.map((ticket, ticketIdx) => {
+                                      const sector = ticketSectors.find(
+                                        (sector) =>
+                                          sector.id === ticket.sectorId
+                                      );
+                                      const sectorName = sector?.name || "N/A";
 
-                                        <p className="text-sm flex items-center gap-1">
-                                          <Hash className="w-4 h-4 text-gray-500" />
-                                          Setor: {ticket.sectorId || "N/A"}
-                                        </p>
-                                        <p className="text-sm flex items-center gap-1">
-                                          <Tag className="w-4 h-4 text-gray-500" />
-                                          Preço: R$ {ticket.price || "0,00"}
-                                        </p>
-                                        <p className="text-sm flex items-center gap-1">
-                                          <Layers className="w-4 h-4 text-gray-500" />
-                                          Quantidade: {ticket.quantity}
-                                        </p>
-                                        <p className="text-sm flex items-center gap-1">
-                                          <User className="w-4 h-4 text-gray-500" />
-                                          Gênero:{" "}
-                                          {ticket.gender || "Indefinido"}
-                                        </p>
-                                        {ticket.obs && (
-                                          <p className="text-sm flex items-center gap-1 italic text-gray-500">
-                                            <Info className="w-4 h-4" />
-                                            Obs: {ticket.obs}
+                                      return (
+                                        <div
+                                          key={ticketIdx}
+                                          className="border border-dashed rounded-md space-y-1 p-3 bg-gray-50">
+                                          <div className="flex items-center gap-2 mb-1">
+                                            <Ticket className="w-4 h-4 text-secondary" />
+                                            <span className="text-sm font-medium text-gray-700">
+                                              Ingresso {ticketIdx + 1}
+                                            </span>
+                                          </div>
+
+                                          <p className="text-sm flex items-center gap-1">
+                                            <Hash className="w-4 h-4 text-gray-500" />
+                                            Setor: {sectorName}
                                           </p>
-                                        )}
-                                      </div>
-                                    ))}
+                                          <p className="text-sm flex items-center gap-1">
+                                            <Tag className="w-4 h-4 text-gray-500" />
+                                            Preço:{" "}
+                                            {formatCurrencyFromCents(
+                                              ticket.price
+                                            )}
+                                          </p>
+                                          <p className="text-sm flex items-center gap-1">
+                                            <Layers className="w-4 h-4 text-gray-500" />
+                                            Quantidade: {ticket.quantity}
+                                          </p>
+                                          <p className="text-sm flex items-center gap-1">
+                                            <User className="w-4 h-4 text-gray-500" />
+                                            Gênero:{" "}
+                                            {ticket.gender || "Indefinido"}
+                                          </p>
+                                          {ticket.obs && (
+                                            <p className="text-sm flex items-center gap-1 italic text-gray-500">
+                                              <Info className="w-4 h-4" />
+                                              Obs: {ticket.obs}
+                                            </p>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                 </div>
                               ))}

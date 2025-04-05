@@ -27,7 +27,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "../ui/radio-group";
 import Link from "next/link";
-import { formatCnpj, formatCpf, removeFormatting } from "@/lib/utils";
+import { cn, formatCnpj, formatCpf, removeFormatting } from "@/lib/utils";
 import { useRouter } from "next/navigation";
 
 type FormData = z.infer<typeof signUpSchema>;
@@ -224,7 +224,11 @@ export const SignUpForm = () => {
           </form>
         </Form>
       </CardContent>
-      <CardFooter className="justify-center text-sm gap-1">
+      <CardFooter
+        className={cn(
+          loading && "pointer-events-none",
+          "justify-center text-sm gap-1"
+        )}>
         Já possui uma conta?{" "}
         <Link href="/auth/sign-in" className="underline underline-offset-4">
           Entre

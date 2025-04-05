@@ -3,12 +3,12 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 
-interface ImageUploaderProps {
+interface MapUploaderProps {
   onImageSelect: (file: File | null) => void;
   imagePreview?: string | null;
 }
 
-const ImageUploader: React.FC<ImageUploaderProps> = ({
+export const MapUploader: React.FC<MapUploaderProps> = ({
   onImageSelect,
   imagePreview,
 }) => {
@@ -59,5 +59,3 @@ const ImageUploader: React.FC<ImageUploaderProps> = ({
     </div>
   );
 };
-
-export default ImageUploader;
