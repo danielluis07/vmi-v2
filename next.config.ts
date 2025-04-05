@@ -7,6 +7,10 @@ const nextConfig: NextConfig = {
         protocol: "https",
         hostname: "images.unsplash.com",
       },
+      {
+        protocol: "https",
+        hostname: "event-tickethub-files.s3.us-east-1.amazonaws.com",
+      },
     ],
   },
   experimental: {

@@ -10,6 +10,7 @@ import { createProducerEventSchema } from "@/schemas";
 import { protectedProcedure, createTRPCRouter } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
 import { deleteFromS3 } from "@/lib/s3-upload";
+import { desc, eq } from "drizzle-orm";
 
 export const producerEventsRouter = createTRPCRouter({
   create: protectedProcedure
@@ -155,4 +156,22 @@ export const producerEventsRouter = createTRPCRouter({
         });
       }
     }),
+  getMany: protectedProcedure.query(async ({ ctx }) => {
+    const { userId } = ctx;
+
+    if (!userId) {
+      throw new TRPCError({
+        code: "UNAUTHORIZED",
+        message: "Usuário não autenticado",
+      });
+    }
+
+    const data = await db
+      .select()
+      .from(events)
+      .where(eq(events.organizerId, userId))
+      .orderBy(desc(events.createdAt));
+
+    return data;
+  }),
 });

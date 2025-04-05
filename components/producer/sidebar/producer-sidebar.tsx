@@ -20,7 +20,7 @@ import Link from "next/link";
 const items = [
   {
     title: "Eventos",
-    url: "#",
+    url: "/producer/events",
     icon: Home,
   },
   {

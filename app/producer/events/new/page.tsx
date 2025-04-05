@@ -1,5 +1,5 @@
 import { HydrateClient, trpc } from "@/trpc/server";
-import { NewEventsForm } from "@/components/producer/events/form";
+import { NewEventsForm } from "@/components/producer/events/new/form";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 

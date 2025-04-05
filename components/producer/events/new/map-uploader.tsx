@@ -1,6 +1,5 @@
 import { useRef } from "react";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
 import { Trash2 } from "lucide-react";
 
 interface MapUploaderProps {
@@ -48,13 +47,13 @@ export const MapUploader: React.FC<MapUploaderProps> = ({
       />
 
       {imagePreview && (
-        <Button
-          variant="destructive"
-          onClick={() => onImageSelect(null)}
-          className="absolute top-1.5 right-1.5">
-          <Trash2 size={16} />
-          Remover Imagem
-        </Button>
+        <button
+          type="button"
+          className="absolute top-2 right-2 p-1 bg-gray-800 bg-opacity-50 rounded-full cursor-pointer"
+          onClick={() => onImageSelect(null)}>
+          <Trash2 className="size-5 text-white hover:text-destructive" />
+          <span className="sr-only">Remover imagem</span>
+        </button>
       )}
     </div>
   );

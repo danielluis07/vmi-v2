@@ -49,6 +49,7 @@ import {
   Hash,
   Info,
   Layers,
+  Paperclip,
   Plus,
   Tag,
   Ticket,
@@ -62,7 +63,7 @@ import { useRouter } from "next/navigation";
 import { uploadFile } from "@/actions/upload-file";
 import { FileInput, FileUploader } from "@/components/ui/file-uploader";
 import { DropzoneOptions } from "react-dropzone";
-import { MapUploader } from "@/components/producer/events/map-uploader";
+import { MapUploader } from "@/components/producer/events/new/map-uploader";
 
 type FormData = z.infer<typeof createProducerEventSchema>;
 
@@ -70,6 +71,7 @@ export const NewEventsForm = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [categories] = trpc.categories.getMany.useSuspenseQuery();
   const [ticketSectors] = trpc.ticketSectors.getMany.useSuspenseQuery();
+  const utils = trpc.useUtils();
 
   const router = useRouter();
 
@@ -131,8 +133,7 @@ export const NewEventsForm = () => {
 
   const create = trpc.producerEvents.create.useMutation({
     onSuccess: () => {
-      toast.success("Evento criado com sucesso");
-      router.push("/producer/events");
+      utils.producerEvents.getMany.invalidate();
     },
     onError: (error) => {
       toast.error("Erro ao criar evento");
@@ -154,6 +155,19 @@ export const NewEventsForm = () => {
         break;
       case 3:
         fieldsToValidate = ["days"];
+
+        const allTicketsHaveFile = form
+          .getValues("days")
+          .every((day) =>
+            day.batches.every((batch) =>
+              batch.tickets.every((ticket) => !!ticket.file)
+            )
+          );
+
+        if (!allTicketsHaveFile) {
+          toast.error("Todos os ingressos devem ter um arquivo associado.");
+          return;
+        }
         break;
     }
 
@@ -232,6 +246,8 @@ export const NewEventsForm = () => {
       console.error(error);
     } finally {
       setIsLoading(false);
+      toast.success("Evento criado com sucesso!");
+      router.push("/producer/events");
     }
   };
 
@@ -829,7 +845,11 @@ export const NewEventsForm = () => {
                                           <p className="text-sm flex items-center gap-1">
                                             <User className="w-4 h-4 text-gray-500" />
                                             Gênero:{" "}
-                                            {ticket.gender || "Indefinido"}
+                                            {ticket.gender === "MALE"
+                                              ? "Masculino"
+                                              : ticket.gender === "FEMALE"
+                                              ? "Feminino"
+                                              : "Unisex"}
                                           </p>
                                           {ticket.obs && (
                                             <p className="text-sm flex items-center gap-1 italic text-gray-500">
@@ -1186,18 +1206,45 @@ const TicketsFieldArray = ({
             <FormField
               control={control}
               name={`days.${dayIndex}.batches.${batchIndex}.tickets.${ticketIndex}.file`}
-              render={({ field: { onChange, ref } }) => (
+              render={({ field: { onChange, ref, value } }) => (
                 <FormItem className="w-full">
                   <FormLabel>Ingresso</FormLabel>
                   <FormControl>
-                    <Input
-                      type="file"
-                      ref={ref} // Keep the ref
-                      onChange={(event) => {
-                        const file = event.target.files?.[0]; // Get the first selected file
-                        onChange(file); // Manually update form state
-                      }}
-                    />
+                    <div className="flex items-center gap-2">
+                      {/* Hidden input de arquivo */}
+                      <input
+                        type="file"
+                        ref={ref}
+                        onChange={(event) => {
+                          const file = event.target.files?.[0];
+                          if (file) {
+                            onChange(file);
+                          }
+                        }}
+                        style={{ display: "none" }}
+                        id={`file-input-${dayIndex}-${batchIndex}-${ticketIndex}`}
+                      />
+
+                      <Button
+                        type="button"
+                        variant="outline"
+                        className="flex items-center gap-2"
+                        onClick={() => {
+                          const input = document.getElementById(
+                            `file-input-${dayIndex}-${batchIndex}-${ticketIndex}`
+                          ) as HTMLInputElement;
+                          input?.click();
+                        }}>
+                        <Paperclip className="size-4" />
+                        Anexar Arquivo
+                      </Button>
+
+                      {value instanceof File && (
+                        <span className="w-80 h-8 text-sm text-secondary truncate border border-secondary rounded-md p-1">
+                          {value.name}
+                        </span>
+                      )}
+                    </div>
                   </FormControl>
                 </FormItem>
               )}
