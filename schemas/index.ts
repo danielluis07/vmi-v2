@@ -124,3 +124,7 @@ export const createProducerEventSchema = z.object({
     })
   ),
 });
+
+export const updateProducerEventSchema = createProducerEventSchema.extend({
+  id: z.string().min(1, "O ID do evento é obrigatório"),
+});

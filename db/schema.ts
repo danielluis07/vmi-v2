@@ -127,9 +127,9 @@ export const events = pgTable("events", {
   id: text("id")
     .primaryKey()
     .$defaultFn(() => crypto.randomUUID()),
-  categoryId: text("category_id").references(() => categories.id, {
-    onDelete: "set null",
-  }),
+  categoryId: text("category_id")
+    .references(() => categories.id)
+    .notNull(),
   title: text("title").notNull(),
   description: text("description"),
   image: text("image").notNull(),
@@ -182,8 +182,8 @@ export const batches = pgTable("batches", {
     onDelete: "cascade",
   }),
   name: text("name").notNull(),
-  startTime: timestamp("start_time", { withTimezone: true }),
-  endTime: timestamp("end_time", { withTimezone: true }),
+  startTime: timestamp("start_time", { withTimezone: true }).notNull(),
+  endTime: timestamp("end_time", { withTimezone: true }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow(),
   updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow(),
 });
@@ -203,13 +203,13 @@ export const tickets = pgTable("tickets", {
   }),
   price: integer("price").notNull(),
   isNominal: boolean("is_nominal").default(false).notNull(),
-  gender: ticketGender("gender"),
+  gender: ticketGender("gender").notNull(),
   status: ticketStatus("status"),
   purchaseDate: timestamp("purchase_date", { withTimezone: true }),
   quantity: integer("quantity").notNull(),
-  sectorId: text("sector_id").references(() => ticketSectors.id, {
-    onDelete: "set null",
-  }),
+  sectorId: text("sector_id")
+    .references(() => ticketSectors.id)
+    .notNull(),
   obs: text("obs"),
   qrCode: text("qr_code").unique(),
   file: text("file").notNull(),

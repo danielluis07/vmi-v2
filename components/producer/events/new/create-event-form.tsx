@@ -67,7 +67,7 @@ import { MapUploader } from "@/components/producer/events/new/map-uploader";
 
 type FormData = z.infer<typeof createProducerEventSchema>;
 
-export const NewEventsForm = () => {
+export const CreateEventForm = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [categories] = trpc.categories.getMany.useSuspenseQuery();
   const [ticketSectors] = trpc.ticketSectors.getMany.useSuspenseQuery();

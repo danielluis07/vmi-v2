@@ -46,9 +46,9 @@ export const useFileUpload = () => {
 };
 
 type FileUploaderProps = {
-  value: File[] | null;
+  value: (File | string)[] | null; // Aceita File ou string no array
   reSelect?: boolean;
-  onValueChange: (value: File[] | null) => void;
+  onValueChange: (value: (File | string)[] | null) => void; // Ajusta o tipo de retorno
   dropzoneOptions: DropzoneOptions;
   orientation?: "horizontal" | "vertical";
 };
@@ -196,6 +196,7 @@ export const FileInput = forwardRef<
             src={previewurl}
             alt="Preview"
             fill
+            priority
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 50vw"
             className="rounded-lg object-cover"
           />

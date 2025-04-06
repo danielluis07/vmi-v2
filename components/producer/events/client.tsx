@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { trpc } from "@/trpc/client";
-import { Calendar, Globe, MapPin, PlusCircle } from "lucide-react";
+import { Calendar, Globe, MapPin, PlusCircle, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
@@ -48,11 +48,11 @@ export const EventsClient = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {producerEvents.map((event) => (
             <Link href={`/producer/events/${event.id}`} key={event.id}>
-              <Card className="h-full overflow-hidden hover:shadow-lg transition-shadow duration-300">
+              <Card className="h-[360px] overflow-hidden hover:shadow-lg transition-shadow duration-300 pt-0 group">
                 <div className="relative w-full pt-[56.25%]">
                   {imageLoading[event.id] !== false && (
                     <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-8 h-8 border-4 border-gray-300 border-t-primary rounded-full animate-spin"></div>
+                      <div className="size-8 border-4 border-gray-300 border-t-primary rounded-full animate-spin"></div>
                     </div>
                   )}
                   <Image
@@ -70,14 +70,17 @@ export const EventsClient = () => {
                     sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                     blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIyNSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjFmMWYxIi8+PC9zdmc+"
                   />
+                  <button
+                    type="button"
+                    className="hidden absolute top-2 right-2 p-1 bg-gray-800 bg-opacity-50 rounded-full cursor-pointer group-hover:flex"
+                    onClick={() => {}}>
+                    <Trash2 className="size-5 text-white hover:text-destructive" />
+                    <span className="sr-only">Excluir evento</span>
+                  </button>
                 </div>
-                <CardHeader>
+                <CardContent className="flex flex-col justify-between h-full">
                   <CardTitle className="line-clamp-2">{event.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
                   <p className="text-sm line-clamp-3">{event.description}</p>
-                </CardContent>
-                <CardFooter>
                   <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                     {event.mode === "ONLINE" ? (
                       <Globe className="h-4 w-4 mr-1" />
@@ -90,7 +93,7 @@ export const EventsClient = () => {
                         : event.city || "In Person"}
                     </span>
                   </div>
-                </CardFooter>
+                </CardContent>
               </Card>
             </Link>
           ))}

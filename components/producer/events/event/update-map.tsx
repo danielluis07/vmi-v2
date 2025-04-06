@@ -46,9 +46,9 @@ export const useFileUpload = () => {
 };
 
 type FileUploaderProps = {
-  value: File[] | null;
+  value: (File | string)[] | null; // Aceita File ou string no array
   reSelect?: boolean;
-  onValueChange: (value: File[] | null) => void;
+  onValueChange: (value: (File | string)[] | null) => void; // Ajusta o tipo de retorno
   dropzoneOptions: DropzoneOptions;
   orientation?: "horizontal" | "vertical";
 };
@@ -154,7 +154,7 @@ export const FileUploader = forwardRef<
           ref={ref}
           tabIndex={0}
           className={cn(
-            "grid w-full focus:outline-none overflow-hidden",
+            "grid w-full focus:outline-none overflow-auto",
             className
           )}
           dir={dir}
@@ -191,13 +191,15 @@ export const FileInput = forwardRef<
         className
       )}>
       {previewurl ? (
-        <div className="relative w-full aspect-[4/1]">
+        <div className="relative flex justify-center">
           <Image
             src={previewurl}
             alt="Preview"
-            fill
+            width={0}
+            height={0}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 50vw"
-            className="rounded-lg object-cover"
+            className="rounded-lg"
+            style={{ width: "auto", height: "auto" }}
           />
           <button
             type="button"
