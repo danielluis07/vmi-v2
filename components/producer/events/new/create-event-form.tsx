@@ -63,7 +63,10 @@ import { useRouter } from "next/navigation";
 import { uploadFile } from "@/actions/upload-file";
 import { FileInput, FileUploader } from "@/components/ui/file-uploader";
 import { DropzoneOptions } from "react-dropzone";
-import { MapUploader } from "@/components/producer/events/new/map-uploader";
+import {
+  FileUploader as MapFileUploader,
+  FileInput as MapInputUploader,
+} from "@/components/producer/events/new/upload-map";
 
 type FormData = z.infer<typeof createProducerEventSchema>;
 
@@ -245,8 +248,10 @@ export const CreateEventForm = () => {
       toast.error("Erro ao fazer upload dos arquivos");
       console.error(error);
     } finally {
-      setIsLoading(false);
       toast.success("Evento criado com sucesso!");
+      setImage(null);
+      clearImage();
+      setIsLoading(false);
       router.push("/producer/events");
     }
   };
@@ -684,16 +689,26 @@ export const CreateEventForm = () => {
                       <FormItem>
                         <FormLabel>Mapa do Evento</FormLabel>
                         <FormControl>
-                          <MapUploader
-                            onImageSelect={(file) => field.onChange(file)}
-                            imagePreview={
-                              field.value instanceof File
-                                ? URL.createObjectURL(field.value)
-                                : typeof field.value === "string"
-                                ? field.value // já é a URL do S3, pode usar direto
-                                : null
-                            }
-                          />
+                          <MapFileUploader
+                            value={field.value ? [field.value] : null}
+                            onValueChange={(files) => {
+                              const file = files?.[0] ?? null;
+                              field.onChange(file);
+                            }}
+                            dropzoneOptions={dropzone}
+                            orientation="vertical">
+                            <MapInputUploader
+                              className="h-80"
+                              previewurl={
+                                field.value instanceof File
+                                  ? URL.createObjectURL(field.value)
+                                  : typeof field.value === "string"
+                                  ? field.value
+                                  : null
+                              }>
+                              Arraste ou clique para selecionar uma imagem
+                            </MapInputUploader>
+                          </MapFileUploader>
                         </FormControl>
                         <FormMessage />
                       </FormItem>

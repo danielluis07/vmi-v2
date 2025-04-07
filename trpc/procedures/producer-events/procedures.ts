@@ -348,6 +348,96 @@ export const producerEventsRouter = createTRPCRouter({
         });
       }
     }),
+  delete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const { userId } = ctx;
+
+      if (!userId) {
+        throw new TRPCError({
+          code: "UNAUTHORIZED",
+          message: "Usuário não autenticado",
+        });
+      }
+
+      // Buscar o evento e os arquivos associados antes de deletar
+      const [existingEvent] = await db
+        .select({
+          image: events.image,
+          map: events.map,
+        })
+        .from(events)
+        .where(and(eq(events.id, input.id), eq(events.organizerId, userId)));
+
+      if (!existingEvent) {
+        throw new TRPCError({
+          code: "NOT_FOUND",
+          message: "Evento não encontrado",
+        });
+      }
+
+      // Buscar todos os arquivos dos ingressos associados ao evento
+      const ticketFiles = await db
+        .select({ file: tickets.file })
+        .from(tickets)
+        .where(eq(tickets.eventId, input.id));
+
+      // Preparar lista de arquivos para exclusão no S3
+      const filesToDelete: string[] = [];
+
+      // Adicionar image e map, se existirem
+      if (existingEvent.image) {
+        const imageFileName = existingEvent.image.split("/").pop();
+        if (imageFileName) filesToDelete.push(imageFileName);
+      }
+      if (existingEvent.map) {
+        const mapFileName = existingEvent.map.split("/").pop();
+        if (mapFileName) filesToDelete.push(mapFileName);
+      }
+
+      // Adicionar arquivos dos ingressos
+      ticketFiles.forEach((ticket) => {
+        const fileName = ticket.file.split("/").pop();
+        if (fileName) filesToDelete.push(fileName);
+      });
+
+      try {
+        // Deletar o evento (o cascade nas tabelas cuidará de eventDays, batches e tickets)
+        const [removedEvent] = await db
+          .delete(events)
+          .where(and(eq(events.id, input.id), eq(events.organizerId, userId)))
+          .returning();
+
+        if (!removedEvent) {
+          throw new TRPCError({
+            code: "INTERNAL_SERVER_ERROR",
+            message: "Falha ao deletar o evento",
+          });
+        }
+
+        // Deletar arquivos no S3 em paralelo
+        if (filesToDelete.length > 0) {
+          const deletePromises = filesToDelete.map((fileName) =>
+            deleteFromS3(fileName).then(({ success, message }) => {
+              if (!success) {
+                console.error(`Falha ao deletar ${fileName}: ${message}`);
+              } else {
+                console.log(`Deletado ${fileName} com sucesso`);
+              }
+            })
+          );
+          await Promise.all(deletePromises);
+        }
+
+        return { success: true };
+      } catch (error) {
+        console.error("Erro ao deletar evento e arquivos:", error);
+        throw new TRPCError({
+          code: "INTERNAL_SERVER_ERROR",
+          message: "Erro ao deletar evento e arquivos associados",
+        });
+      }
+    }),
   getOne: protectedProcedure
     .input(z.object({ id: z.string() }))
     .query(async ({ ctx, input }) => {

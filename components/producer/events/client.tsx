@@ -1,23 +1,34 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardTitle } from "@/components/ui/card";
+import { useConfirm } from "@/providers/confirm-provider";
 import { cn } from "@/lib/utils";
+import { useMultiStepFormStore } from "@/stores/use-multi-step-form";
 import { trpc } from "@/trpc/client";
 import { Calendar, Globe, MapPin, PlusCircle, Trash2 } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "sonner";
 
 export const EventsClient = () => {
   const [imageLoading, setImageLoading] = useState<Record<string, boolean>>({});
   const [producerEvents] = trpc.producerEvents.getMany.useSuspenseQuery();
+  const utils = trpc.useUtils();
+  const deleteEvent = trpc.producerEvents.delete.useMutation({
+    onSuccess: () => {
+      utils.producerEvents.getMany.invalidate();
+      toast.success("Evento excluído com sucesso!");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+
+  const { confirm, closeConfirm, setPending } = useConfirm();
+
+  const { step, setStep } = useMultiStepFormStore();
 
   const handleImageLoad = (id: string) => {
     setImageLoading((prev) => ({
@@ -25,6 +36,36 @@ export const EventsClient = () => {
       [id]: false,
     }));
   };
+
+  const handleDelete = async (id: string) => {
+    const confirmed = await confirm(
+      "Tem certeza?",
+      "Você está prestes a deletar esse evento"
+    );
+
+    if (confirmed) {
+      setPending(true);
+
+      deleteEvent.mutate(
+        { id },
+        {
+          onSuccess: () => {
+            setPending(false);
+            closeConfirm();
+          },
+          onError: () => {
+            setPending(false);
+            closeConfirm();
+          },
+        }
+      );
+    }
+  };
+  useEffect(() => {
+    if (step !== 1) {
+      setStep(1);
+    }
+  }, [step]);
 
   return (
     <div className="w-full">
@@ -73,7 +114,11 @@ export const EventsClient = () => {
                   <button
                     type="button"
                     className="hidden absolute top-2 right-2 p-1 bg-gray-800 bg-opacity-50 rounded-full cursor-pointer group-hover:flex"
-                    onClick={() => {}}>
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      e.preventDefault();
+                      handleDelete(event.id);
+                    }}>
                     <Trash2 className="size-5 text-white hover:text-destructive" />
                     <span className="sr-only">Excluir evento</span>
                   </button>
@@ -107,7 +152,7 @@ export const EventsClient = () => {
             Nenhum evento encontrado
           </h3>
 
-          <Link href="/events/create" className="mt-6">
+          <Link href="/producer/events/new" className="mt-6">
             <Button>
               <PlusCircle className="size-5" />
               <span>Crie seu primeiro evento</span>
