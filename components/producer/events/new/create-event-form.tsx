@@ -530,6 +530,7 @@ export const CreateEventForm = () => {
                   <div className="flex justify-end">
                     <Button
                       type="button"
+                      disabled={isLoading}
                       className="w-full"
                       onClick={() =>
                         addDay({
@@ -652,6 +653,7 @@ export const CreateEventForm = () => {
                         {days.length > 1 && (
                           <div className="flex justify-end">
                             <Button
+                              disabled={isLoading}
                               type="button"
                               variant="destructive"
                               onClick={() => removeDay(dayIndex)}>
@@ -881,7 +883,11 @@ export const CreateEventForm = () => {
                       </div>
                     </ScrollArea>
 
-                    <Button className="w-full mt-5" disabled={isLoading}>
+                    <Button
+                      className="w-full mt-5"
+                      disabled={isLoading}
+                      isLoading={isLoading}
+                      loadingLabel="Criando">
                       Criar Evento
                     </Button>
                   </div>

@@ -437,6 +437,7 @@ export const UpdateEventForm = ({ eventId }: { eventId: string }) => {
             </h1>
             <div className="flex justify-end">
               <Button
+                disabled={isLoading}
                 type="button"
                 className="w-full"
                 onClick={() =>
@@ -554,6 +555,7 @@ export const UpdateEventForm = ({ eventId }: { eventId: string }) => {
                   {days.length > 1 && (
                     <div className="flex justify-end">
                       <Button
+                        disabled={isLoading}
                         type="button"
                         variant="destructive"
                         onClick={() => removeDay(dayIndex)}>
@@ -612,7 +614,12 @@ export const UpdateEventForm = ({ eventId }: { eventId: string }) => {
             }}
           />
 
-          <Button disabled={isLoading}>Atualizar</Button>
+          <Button
+            disabled={isLoading}
+            isLoading={isLoading}
+            loadingLabel="Atualizando">
+            Atualizar
+          </Button>
         </form>
       </Form>
     </div>

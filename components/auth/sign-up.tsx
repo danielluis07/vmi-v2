@@ -218,7 +218,11 @@ export const SignUpForm = () => {
               )}
             />
 
-            <Button className="w-full" disabled={loading}>
+            <Button
+              className="w-full"
+              disabled={loading}
+              isLoading={loading}
+              loadingLabel="Cadastrando">
               Cadastrar
             </Button>
           </form>

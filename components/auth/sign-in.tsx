@@ -127,8 +127,12 @@ export const SignInForm = () => {
               )}
             />
 
-            <Button className="w-full" disabled={loading}>
-              Registrar
+            <Button
+              className="w-full"
+              disabled={loading}
+              isLoading={loading}
+              loadingLabel="Entrando">
+              Entrar
             </Button>
           </form>
         </Form>
