@@ -55,6 +55,7 @@ export const batchesSchema = z.object({
   ),
   tickets: z.array(
     z.object({
+      id: z.string().optional(),
       sectorId: z.string().min(1, "O setor é obrigatório"),
       price: z.number().min(0, "O preço é obrigatório"),
       quantity: z.number().min(1, "A quantidade é obrigatória"),

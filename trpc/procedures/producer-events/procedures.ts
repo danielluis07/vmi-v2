@@ -199,15 +199,9 @@ export const producerEventsRouter = createTRPCRouter({
 
       // Buscar todos os ingressos antigos associados ao evento
       const existingTickets = await db
-        .select({ file: tickets.file })
+        .select()
         .from(tickets)
         .where(eq(tickets.eventId, input.id));
-
-      // Adicionar URLs antigas dos ingressos à lista de exclusão
-      existingTickets.forEach((ticket) => {
-        const oldFileName = ticket.file.split("/").pop();
-        if (oldFileName) deletedFiles.push(oldFileName);
-      });
 
       try {
         return await db.transaction(async (tx) => {
@@ -251,12 +245,15 @@ export const producerEventsRouter = createTRPCRouter({
 
           // Deletar dias antigos
           await tx.delete(eventDays).where(eq(eventDays.eventId, input.id));
-          // Deletar lotes antigos (necessário para consistência)
+          // Deletar lotes antigos
           await tx.delete(batches).where(eq(batches.eventId, input.id));
-          // Deletar ingressos antigos (opcional, dependendo da lógica)
-          await tx.delete(tickets).where(eq(tickets.eventId, input.id));
 
-          // Criar novos dias, lotes e ingressos
+          // Mapear tickets existentes por batchId e outros identificadores únicos
+          const existingTicketsMap = new Map(
+            existingTickets.map((ticket) => [ticket.id, ticket])
+          );
+
+          // Criar novos dias e lotes
           for (const day of input.days) {
             const [eventDay] = await tx
               .insert(eventDays)
@@ -293,26 +290,56 @@ export const producerEventsRouter = createTRPCRouter({
                 });
               }
 
-              const ticketValues = batch.tickets.map((ticket) => {
+              const ticketValues = [];
+              for (const ticket of batch.tickets) {
                 const ticketUrl = ticket.file as string;
                 const newFileName = ticketUrl.split("/").pop();
-                if (newFileName) uploadedFiles.push(newFileName); // Rastrear novos arquivos de ingressos
-                return {
-                  eventId: input.id,
-                  batchId: batchResult.id,
-                  sectorId: ticket.sectorId,
-                  price: ticket.price || 0,
-                  quantity: ticket.quantity || 1,
-                  gender: ticket.gender as "MALE" | "FEMALE" | "UNISEX",
-                  file: ticketUrl,
-                  obs: ticket.obs || null,
-                  status: "AVAILABLE" as "AVAILABLE" | "SOLD" | "CANCELLED",
-                  isNominal: false,
-                  buyerId: null,
-                };
-              });
 
-              await tx.insert(tickets).values(ticketValues);
+                // Verificar se o ticket já existe (por exemplo, por um ID ou outro critério único)
+                const existingTicket = ticket.id
+                  ? existingTicketsMap.get(ticket.id)
+                  : null;
+
+                if (existingTicket) {
+                  // Atualizar ticket existente apenas se necessário
+                  if (existingTicket.file !== ticketUrl) {
+                    const oldFileName = existingTicket.file.split("/").pop();
+                    if (oldFileName) deletedFiles.push(oldFileName);
+                    if (newFileName) uploadedFiles.push(newFileName);
+                  }
+                  await tx
+                    .update(tickets)
+                    .set({
+                      sectorId: ticket.sectorId,
+                      price: ticket.price || 0,
+                      quantity: ticket.quantity || 1,
+                      gender: ticket.gender as "MALE" | "FEMALE" | "UNISEX",
+                      file: ticketUrl,
+                      obs: ticket.obs || null,
+                    })
+                    .where(eq(tickets.id, existingTicket.id));
+                } else {
+                  // Novo ticket
+                  if (newFileName) uploadedFiles.push(newFileName);
+                  ticketValues.push({
+                    eventId: input.id,
+                    batchId: batchResult.id,
+                    sectorId: ticket.sectorId,
+                    price: ticket.price || 0,
+                    quantity: ticket.quantity || 1,
+                    gender: ticket.gender as "MALE" | "FEMALE" | "UNISEX",
+                    file: ticketUrl,
+                    obs: ticket.obs || null,
+                    status: "AVAILABLE" as "AVAILABLE" | "SOLD" | "CANCELLED",
+                    isNominal: false,
+                    buyerId: null,
+                  });
+                }
+              }
+
+              if (ticketValues.length > 0) {
+                await tx.insert(tickets).values(ticketValues);
+              }
             }
           }
 
@@ -321,8 +348,6 @@ export const producerEventsRouter = createTRPCRouter({
             const { success, message } = await deleteFromS3(fileName);
             if (!success) {
               console.error(`Falha ao deletar ${fileName}: ${message}`);
-            } else {
-              console.log(`Deletado ${fileName} com sucesso`);
             }
           }
 

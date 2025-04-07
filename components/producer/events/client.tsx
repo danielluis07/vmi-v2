@@ -4,10 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardTitle } from "@/components/ui/card";
 import { useConfirm } from "@/providers/confirm-provider";
 import { cn } from "@/lib/utils";
-import { useMultiStepFormStore } from "@/stores/use-multi-step-form";
 import { trpc } from "@/trpc/client";
 import { Calendar, Globe, MapPin, PlusCircle, Trash2 } from "lucide-react";
 import Image from "next/image";
+import { useMultiStepFormStore } from "@/stores/use-multi-step-form";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -26,15 +26,18 @@ export const EventsClient = () => {
     },
   });
 
+  const { step, setStep, image, setImage } = useMultiStepFormStore();
+
   const { confirm, closeConfirm, setPending } = useConfirm();
 
-  const { step, setStep } = useMultiStepFormStore();
-
   const handleImageLoad = (id: string) => {
-    setImageLoading((prev) => ({
-      ...prev,
-      [id]: false,
-    }));
+    setImageLoading((prev) => {
+      if (prev[id] === false) return prev;
+      return {
+        ...prev,
+        [id]: false,
+      };
+    });
   };
 
   const handleDelete = async (id: string) => {
@@ -61,11 +64,13 @@ export const EventsClient = () => {
       );
     }
   };
+
   useEffect(() => {
-    if (step !== 1) {
-      setStep(1);
+    if (step !== 1 || image !== null) {
+      if (step !== 1) setStep(1);
+      if (image !== null) setImage(null);
     }
-  }, [step]);
+  }, [step, image]);
 
   return (
     <div className="w-full">
@@ -77,7 +82,9 @@ export const EventsClient = () => {
         <h1 className="text-3xl font-bold text-secondary">Meus Eventos</h1>
 
         {producerEvents.length > 0 && (
-          <Link href="/events/create" className="inline-flex items-center">
+          <Link
+            href="/producer/events/new"
+            className="inline-flex items-center">
             <Button>
               <PlusCircle className="size-5" />
               <span>Criar Evento</span>
@@ -124,7 +131,9 @@ export const EventsClient = () => {
                   </button>
                 </div>
                 <CardContent className="flex flex-col justify-between h-full">
-                  <CardTitle className="line-clamp-2">{event.title}</CardTitle>
+                  <CardTitle className="line-clamp-2 pb-1">
+                    {event.title}
+                  </CardTitle>
                   <p className="text-sm line-clamp-3">{event.description}</p>
                   <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                     {event.mode === "ONLINE" ? (

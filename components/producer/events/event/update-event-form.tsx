@@ -1,7 +1,6 @@
 "use client";
 
 import { z } from "zod";
-import { useState } from "react";
 import { updateProducerEventSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -47,6 +46,8 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import Link from "next/link";
+import { useState } from "react";
 
 type FormData = z.infer<typeof updateProducerEventSchema>;
 
@@ -55,8 +56,16 @@ export const UpdateEventForm = ({ eventId }: { eventId: string }) => {
   const [video] = trpc.producerEvents.getOne.useSuspenseQuery({ id: eventId });
   const [categories] = trpc.categories.getMany.useSuspenseQuery();
   const [ticketSectors] = trpc.ticketSectors.getMany.useSuspenseQuery();
+  const utils = trpc.useUtils();
 
   const update = trpc.producerEvents.update.useMutation({
+    onSuccess: (input) => {
+      utils.producerEvents.getOne.refetch({ id: input.eventId });
+      utils.producerEvents.getMany.refetch();
+      setIsLoading(false);
+      toast.success("Evento atualizado com sucesso!");
+      router.push("/producer/events");
+    },
     onError: (error) => {
       toast.error("Erro ao atualizar o evento");
       console.error(error.message);
@@ -132,8 +141,20 @@ export const UpdateEventForm = ({ eventId }: { eventId: string }) => {
 
   const onSubmit = async (values: FormData) => {
     setIsLoading(true);
-
     const uploadPromises = [];
+
+    const allTicketsHaveFile = form
+      .getValues("days")
+      .every((day) =>
+        day.batches.every((batch) =>
+          batch.tickets.every((ticket) => !!ticket.file)
+        )
+      );
+
+    if (!allTicketsHaveFile) {
+      toast.error("Todos os ingressos devem ter um arquivo associado.");
+      return;
+    }
 
     if (values.image instanceof File) {
       uploadPromises.push(
@@ -183,9 +204,6 @@ export const UpdateEventForm = ({ eventId }: { eventId: string }) => {
     } catch (error) {
       toast.error("Erro ao fazer upload dos arquivos");
       console.error(error);
-    } finally {
-      setIsLoading(false);
-      toast.success("Evento atualizado com sucesso!");
     }
   };
 
@@ -554,6 +572,8 @@ export const UpdateEventForm = ({ eventId }: { eventId: string }) => {
             ))}
           </ScrollArea>
 
+          <Separator className="my-5" />
+
           <FormField
             control={form.control}
             name="map"
@@ -592,7 +612,7 @@ export const UpdateEventForm = ({ eventId }: { eventId: string }) => {
             }}
           />
 
-          <Button>Atualizar</Button>
+          <Button disabled={isLoading}>Atualizar</Button>
         </form>
       </Form>
     </div>
@@ -945,23 +965,31 @@ const TicketsFieldArray = ({
                         {value ? "Substituir Arquivo" : "Anexar Arquivo"}
                       </Button>
 
-                      {/* Exibição do valor atual (URL ou nome do arquivo) */}
                       {value && (
                         <div className="flex items-center gap-2">
-                          <span className="w-80 h-8 text-sm text-secondary truncate border border-secondary rounded-md p-1">
-                            {value instanceof File
-                              ? value.name // Nome do arquivo se for File
-                              : typeof value === "string"
-                              ? value.split("/").pop() // Última parte da URL se for string
-                              : "Arquivo"}
-                          </span>
-                          {/* Botão de remoção */}
+                          {value instanceof File ? (
+                            <span className="w-80 h-8 text-sm text-secondary truncate border border-secondary rounded-md p-1">
+                              {value.name}
+                            </span>
+                          ) : typeof value === "string" ? (
+                            <Link
+                              href={value}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="w-80 h-8 text-sm text-secondary truncate border border-secondary rounded-md p-1">
+                              {value.split("/").pop()}
+                            </Link>
+                          ) : (
+                            <span className="w-80 h-8 text-sm text-secondary truncate border border-secondary rounded-md p-1">
+                              Arquivo
+                            </span>
+                          )}
+
                           <Button
                             type="button"
                             variant="ghost"
                             size="sm"
-                            onClick={() => onChange(null)} // Remove o arquivo/URL
-                          >
+                            onClick={() => onChange(null)}>
                             <Trash2 className="size-4 text-destructive" />
                             <span className="sr-only">Remover arquivo</span>
                           </Button>

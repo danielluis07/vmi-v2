@@ -137,6 +137,9 @@ export const CreateEventForm = () => {
   const create = trpc.producerEvents.create.useMutation({
     onSuccess: () => {
       utils.producerEvents.getMany.invalidate();
+      toast.success("Evento criado com sucesso!");
+      setIsLoading(false);
+      router.push("/producer/events");
     },
     onError: (error) => {
       toast.error("Erro ao criar evento");
@@ -247,12 +250,6 @@ export const CreateEventForm = () => {
     } catch (error) {
       toast.error("Erro ao fazer upload dos arquivos");
       console.error(error);
-    } finally {
-      toast.success("Evento criado com sucesso!");
-      setImage(null);
-      clearImage();
-      setIsLoading(false);
-      router.push("/producer/events");
     }
   };
 
