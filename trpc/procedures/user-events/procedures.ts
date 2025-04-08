@@ -191,7 +191,16 @@ export const userEventsRouter = createTRPCRouter({
           await tx
             .update(tickets)
             .set({
-              file: ticketFile, // Ajuste os campos conforme necessário
+              file: ticketFile,
+              gender: input.ticket.gender as
+                | "MALE"
+                | "FEMALE"
+                | "UNISEX"
+                | undefined,
+              price: input.ticket.price,
+              sectorId: input.ticket.sectorId,
+              quantity: input.ticket.quantity,
+              obs: input.ticket.obs,
               isNominal: input.ticket.isNominal || existingEvent.isNominal,
             })
             .where(eq(tickets.eventId, input.id));

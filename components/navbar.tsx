@@ -9,8 +9,8 @@ export const Navbar = () => {
       <div className="w-11/12 mx-auto flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2">
-          <Image src="/logo.svg" alt="Logo" width={32} height={32} />
-          <span className="text-lg font-bold tracking-tight">SeuEvento</span>
+          <Image src="/logo.png" alt="Logo" width={32} height={32} />
+          <span className="text-lg font-bold tracking-tight">VMI</span>
         </Link>
 
         {/* Menu (preparado pra inserir os links depois) */}

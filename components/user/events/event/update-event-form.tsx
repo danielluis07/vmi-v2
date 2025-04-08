@@ -36,6 +36,7 @@ import { FileInput, FileUploader } from "@/components/update-image";
 import { DropzoneOptions } from "react-dropzone";
 import { Switch } from "@/components/ui/switch";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 type FormData = z.infer<typeof updateUserEventSchema>;
 
@@ -88,12 +89,15 @@ export const UpdateUserEventForm = ({ eventId }: { eventId: string }) => {
     maxSize: 1024 * 1024 * 5,
   } satisfies DropzoneOptions;
 
+  const router = useRouter();
+
   const update = trpc.userEvents.update.useMutation({
     onSuccess: (input) => {
       utils.userEvents.getOne.refetch({ id: input.eventId });
       utils.userEvents.getMany.refetch();
       toast.success("Evento atualizado com sucesso!");
       setIsLoading(false);
+      router.push("/user/events");
     },
     onError: (error) => {
       toast.error("Erro ao atualizar o evento");
@@ -215,6 +219,7 @@ export const UpdateUserEventForm = ({ eventId }: { eventId: string }) => {
                   <FormItem>
                     <FormLabel>Categoria</FormLabel>
                     <Select
+                      disabled={isLoading}
                       onValueChange={field.onChange}
                       defaultValue={field.value}>
                       <FormControl>
@@ -244,6 +249,7 @@ export const UpdateUserEventForm = ({ eventId }: { eventId: string }) => {
                   <FormItem>
                     <FormLabel>Tipo de Evento</FormLabel>
                     <Select
+                      disabled={isLoading}
                       onValueChange={field.onChange}
                       defaultValue={field.value}>
                       <FormControl>
@@ -381,6 +387,7 @@ export const UpdateUserEventForm = ({ eventId }: { eventId: string }) => {
                   <FormItem>
                     <FormLabel>Estado</FormLabel>
                     <Select
+                      disabled={isLoading}
                       onValueChange={field.onChange}
                       defaultValue={field.value}>
                       <FormControl>
@@ -415,6 +422,7 @@ export const UpdateUserEventForm = ({ eventId }: { eventId: string }) => {
                     <FormLabel>Setor</FormLabel>
                     <FormControl>
                       <Select
+                        disabled={isLoading}
                         onValueChange={field.onChange}
                         defaultValue={field.value}>
                         <SelectTrigger className="w-full">
@@ -577,6 +585,7 @@ export const UpdateUserEventForm = ({ eventId }: { eventId: string }) => {
                     <FormLabel>Gênero</FormLabel>
                     <FormControl>
                       <Select
+                        disabled={isLoading}
                         onValueChange={field.onChange}
                         defaultValue={field.value}>
                         <SelectTrigger className="w-full">
