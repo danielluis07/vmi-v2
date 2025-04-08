@@ -1,4 +1,4 @@
-import { UpdateProducerEventForm } from "@/components/producer/events/event/update-event-form";
+import { UpdateUserEventForm } from "@/components/user/events/event/update-event-form";
 import { HydrateClient, trpc } from "@/trpc/server";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
@@ -11,7 +11,7 @@ const EventPage = async ({
   params: Promise<{ eventId: string }>;
 }) => {
   const { eventId } = await params;
-  void trpc.producerEvents.getOne.prefetch({ id: eventId });
+  void trpc.userEvents.getOne.prefetch({ id: eventId });
   void trpc.categories.getMany.prefetch();
   void trpc.ticketSectors.getMany.prefetch();
 
@@ -19,7 +19,7 @@ const EventPage = async ({
     <HydrateClient>
       <Suspense fallback={<div>Loading...</div>}>
         <ErrorBoundary fallback={<div>Something went wrong</div>}>
-          <UpdateProducerEventForm eventId={eventId} />
+          <UpdateUserEventForm eventId={eventId} />
         </ErrorBoundary>
       </Suspense>
     </HydrateClient>

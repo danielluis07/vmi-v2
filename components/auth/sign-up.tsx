@@ -66,7 +66,7 @@ export const SignUpForm = () => {
           setLoading(true);
         },
         onSuccess: () => {
-          router.push("/dashboard");
+          router.push("/user");
         },
         onError: (ctx) => {
           // display the error message

@@ -1,5 +1,5 @@
 import { HydrateClient, trpc } from "@/trpc/server";
-import { CreateEventForm } from "@/components/producer/events/new/create-event-form";
+import { CreateProducerEventForm } from "@/components/producer/events/new/create-event-form";
 import { Suspense } from "react";
 import { ErrorBoundary } from "react-error-boundary";
 
@@ -12,7 +12,7 @@ const CreateEventPage = async () => {
     <HydrateClient>
       <Suspense fallback={<div>Loading...</div>}>
         <ErrorBoundary fallback={<div>Something went wrong</div>}>
-          <CreateEventForm />
+          <CreateProducerEventForm />
         </ErrorBoundary>
       </Suspense>
     </HydrateClient>

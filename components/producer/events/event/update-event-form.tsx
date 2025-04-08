@@ -35,10 +35,7 @@ import { DateTimePicker, TimePicker } from "@/components/ui/date-time-picker";
 import { toast } from "sonner";
 import { uploadFile } from "@/actions/upload-file";
 import { useRouter } from "next/navigation";
-import {
-  FileInput,
-  FileUploader,
-} from "@/components/producer/events/event/update-image";
+import { FileInput, FileUploader } from "@/components/update-image";
 import {
   FileInput as MapInput,
   FileUploader as MapUploader,
@@ -51,9 +48,9 @@ import { useState } from "react";
 
 type FormData = z.infer<typeof updateProducerEventSchema>;
 
-export const UpdateEventForm = ({ eventId }: { eventId: string }) => {
+export const UpdateProducerEventForm = ({ eventId }: { eventId: string }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [video] = trpc.producerEvents.getOne.useSuspenseQuery({ id: eventId });
+  const [event] = trpc.producerEvents.getOne.useSuspenseQuery({ id: eventId });
   const [categories] = trpc.categories.getMany.useSuspenseQuery();
   const [ticketSectors] = trpc.ticketSectors.getMany.useSuspenseQuery();
   const utils = trpc.useUtils();
@@ -75,18 +72,18 @@ export const UpdateEventForm = ({ eventId }: { eventId: string }) => {
   const form = useForm<FormData>({
     resolver: zodResolver(updateProducerEventSchema),
     defaultValues: {
-      id: video.id,
-      title: video.title,
-      city: video.city || "",
-      province: video.province || "",
-      address: video.address || "",
-      uf: video.uf || "",
-      description: video.description || "",
-      categoryId: video.categoryId,
-      mode: video.mode,
-      image: video.image,
-      map: video.map,
-      days: video.days.map((day) => ({
+      id: event.id,
+      title: event.title,
+      city: event.city || "",
+      province: event.province || "",
+      address: event.address || "",
+      uf: event.uf || "",
+      description: event.description || "",
+      categoryId: event.categoryId,
+      mode: event.mode,
+      image: event.image,
+      map: event.map,
+      days: event.days.map((day) => ({
         date: day.date,
         startTime: day.startTime,
         endTime: day.endTime,
@@ -904,7 +901,7 @@ const TicketsFieldArray = ({
                         field.onChange(isNaN(value) ? 0 : value);
                       }}
                       max={999}
-                      min={0}
+                      min={1}
                     />
                   </FormControl>
                 </FormItem>

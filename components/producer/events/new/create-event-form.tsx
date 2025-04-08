@@ -70,7 +70,7 @@ import {
 
 type FormData = z.infer<typeof createProducerEventSchema>;
 
-export const CreateEventForm = () => {
+export const CreateProducerEventForm = () => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [categories] = trpc.categories.getMany.useSuspenseQuery();
   const [ticketSectors] = trpc.ticketSectors.getMany.useSuspenseQuery();
@@ -136,7 +136,7 @@ export const CreateEventForm = () => {
 
   const create = trpc.producerEvents.create.useMutation({
     onSuccess: () => {
-      utils.producerEvents.getMany.invalidate();
+      utils.producerEvents.getMany.refetch();
       toast.success("Evento criado com sucesso!");
       setIsLoading(false);
       router.push("/producer/events");
@@ -1190,7 +1190,7 @@ const TicketsFieldArray = ({
                         field.onChange(isNaN(value) ? 0 : value);
                       }}
                       max={999}
-                      min={0}
+                      min={1}
                     />
                   </FormControl>
                 </FormItem>

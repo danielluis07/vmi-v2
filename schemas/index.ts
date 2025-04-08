@@ -129,3 +129,46 @@ export const createProducerEventSchema = z.object({
 export const updateProducerEventSchema = createProducerEventSchema.extend({
   id: z.string().min(1, "O ID do evento é obrigatório"),
 });
+
+export const createUserEventSchema = z.object({
+  title: z.string().min(1, "O título é obrigatório"),
+  description: z.string().min(1, "A descrição é obrigatória"),
+  address: z.string().min(1, "O Endereço é obrigatório"),
+  province: z.string().min(1, "O Bairro é obrigatório"),
+  categoryId: z.string().min(1, "A Categoria é obrigatória"),
+  mode: z.string().min(1, "O tipo é obrigatório"),
+  city: z.string().min(1, "A Cidade é obrigatória"),
+  date: z.preprocess(
+    (val) => {
+      if (typeof val === "string" || val instanceof Date) {
+        return new Date(val);
+      }
+      return undefined;
+    },
+    z.date({
+      required_error: "A data é obrigatória",
+      invalid_type_error: "Data inválida",
+    })
+  ),
+  uf: z.string().min(1, "O estado é obrigatório"),
+  image: z.union([
+    z.instanceof(File).refine((file) => file instanceof File, {
+      message: "A imagem do evento é obrigatória",
+    }),
+    z.string().url(),
+  ]),
+  ticket: z.object({
+    id: z.string().optional(),
+    sectorId: z.string().min(1, "O setor é obrigatório"),
+    price: z.number().min(1, "O preço é obrigatório"),
+    quantity: z.number().min(1, "A quantidade é obrigatória"),
+    gender: z.string().min(1, "O gênero é obrigatório"),
+    obs: z.string().optional(),
+    isNominal: z.boolean(),
+    file: z.union([z.instanceof(File), z.string().url()]),
+  }),
+});
+
+export const updateUserEventSchema = createUserEventSchema.extend({
+  id: z.string().min(1, "O ID do evento é obrigatório"),
+});
