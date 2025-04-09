@@ -130,11 +130,13 @@ export const ProducerEventsClient = () => {
                     <span className="sr-only">Excluir evento</span>
                   </button>
                 </div>
-                <CardContent className="flex flex-col justify-between h-full">
+                <CardContent className="flex flex-col justify-between flex-1 space-y-2">
                   <CardTitle className="line-clamp-2 pb-1">
                     {event.title}
                   </CardTitle>
-                  <p className="text-sm line-clamp-3">{event.description}</p>
+                  <p className="text-sm line-clamp-3 min-h-[32px]">
+                    {event.description}
+                  </p>
                   <div className="flex items-center text-sm text-gray-500 dark:text-gray-400">
                     {event.mode === "ONLINE" ? (
                       <Globe className="h-4 w-4 mr-1" />

@@ -16,16 +16,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 export const Categories = ({
   value,
   isLoading,
-  onSelect,
   data,
 }: {
   value?: string | null;
   isLoading?: boolean;
-  onSelect?: (value: string | null) => void;
-  data: {
+  data: Array<{
     id: string;
     name: string;
-  }[];
+  }>;
 }) => {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);

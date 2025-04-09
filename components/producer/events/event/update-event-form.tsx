@@ -69,6 +69,8 @@ export const UpdateProducerEventForm = ({ eventId }: { eventId: string }) => {
     },
   });
 
+  console.log(event);
+
   const form = useForm<FormData>({
     resolver: zodResolver(updateProducerEventSchema),
     defaultValues: {

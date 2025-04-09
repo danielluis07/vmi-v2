@@ -87,7 +87,7 @@ export const CreateUserEventForm = () => {
       uf: "",
       description: "",
       categoryId: "",
-      mode: "",
+      mode: "IN_PERSON",
       date: undefined,
       image: undefined,
       ticket: {
@@ -141,6 +141,11 @@ export const CreateUserEventForm = () => {
 
   const handleNextStep = async () => {
     let fieldsToValidate: TicketFieldPaths[] | (keyof FormData)[] = [];
+    const mode = form.watch("mode");
+
+    const shouldSkipStep2 = mode !== "IN_PERSON";
+    const nextStep = step === 1 && shouldSkipStep2 ? 3 : step + 1;
+
     switch (step) {
       case 1:
         fieldsToValidate = [
@@ -152,7 +157,9 @@ export const CreateUserEventForm = () => {
         ];
         break;
       case 2:
-        fieldsToValidate = ["city", "province", "address", "uf"];
+        if (mode === "IN_PERSON") {
+          fieldsToValidate = ["city", "province", "address", "uf"];
+        }
         break;
       case 3:
         fieldsToValidate = requiredTicketFields;
@@ -162,7 +169,7 @@ export const CreateUserEventForm = () => {
     const isStepValid = await form.trigger(fieldsToValidate);
 
     if (isStepValid && step < totalSteps) {
-      setStep(step + 1);
+      setStep(nextStep);
     } else {
       if (step === 3 && form.formState.errors.ticket) {
         toast.error("Preencha todas as informações do ingresso.");
@@ -173,8 +180,12 @@ export const CreateUserEventForm = () => {
   };
 
   const handlePrevStep = () => {
+    const mode = form.watch("mode");
+    const shouldSkipStep2 = mode !== "IN_PERSON";
+    const prevStep = step === 3 && shouldSkipStep2 ? 1 : step - 1;
+
     if (step > 1) {
-      setStep(step - 1);
+      setStep(prevStep);
     }
   };
 
@@ -717,9 +728,14 @@ export const CreateUserEventForm = () => {
                       </div>
                       <div>
                         <p className="text-gray-500">Local:</p>
-                        <p className="font-medium">
-                          {form.watch("city")}, {form.watch("province")}
-                        </p>
+                        {form.watch("mode") === "IN_PERSON" ? (
+                          <p className="font-medium">
+                            {form.watch("city")}, {form.watch("province")} -{" "}
+                            {form.watch("uf")}
+                          </p>
+                        ) : (
+                          <p className="font-medium">Evento Online</p>
+                        )}
                       </div>
                     </div>
 

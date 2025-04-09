@@ -101,10 +101,90 @@ const events = [
     mode: "IN_PERSON",
     city: "Rio de Janeiro",
     uf: "RJ",
+    days: [
+      {
+        date: "2025-04-17T03:00:00.000Z",
+        startTime: "2025-04-17T18:00:00.000Z",
+        endTime: "2025-04-17T21:30:00.000Z",
+        batches: [
+          {
+            id: "c9c5ca67-4d99-4a3f-9571-13400f23f2e2",
+            name: "Lote 1",
+            startTime: "2025-04-08T18:10:00.000Z",
+            endTime: "2025-04-08T19:00:00.000Z",
+            tickets: [
+              {
+                sectorId: "da87288c-574d-4239-bc25-b958a274ea09",
+                price: 1000,
+                quantity: 3,
+                gender: "FEMALE",
+                file: "https://event-tickethub-files.s3.us-east-1.amazonaws.com/5224695a5e285345d899bfb836e1464efc13fe7fab7ff6ddb68493815a51aea8",
+                obs: null,
+              },
+            ],
+          },
+          {
+            id: "ddab6326-67d0-41d8-a029-3e0f48231485",
+            name: "Lote 1",
+            startTime: "2025-04-08T23:35:03.737Z",
+            endTime: "2025-04-09T01:00:03.737Z",
+            tickets: [
+              {
+                sectorId: "7aa30869-f34f-460c-b1e7-d74f5863c6cb",
+                price: 500,
+                quantity: 5,
+                gender: "MALE",
+                file: "https://event-tickethub-files.s3.us-east-1.amazonaws.com/1f2d448171fe942a943cae88c18a5b5d61332b6330698f33f0df590494a56c1f",
+                obs: "Mauris vitae quam in justo dictum sodales. In eget tortor a nunc vehicula tempor.",
+              },
+            ],
+          },
+        ],
+      },
+      {
+        date: "2025-04-18T23:35:03.000Z",
+        startTime: "2025-04-18T23:00:00.000Z",
+        endTime: "2025-04-19T01:00:00.000Z",
+        batches: [
+          {
+            id: "c9c5ca67-4d99-4a3f-9571-13400f23f2e2",
+            name: "Lote 1",
+            startTime: "2025-04-08T18:10:00.000Z",
+            endTime: "2025-04-08T19:00:00.000Z",
+            tickets: [
+              {
+                sectorId: "da87288c-574d-4239-bc25-b958a274ea09",
+                price: 1000,
+                quantity: 3,
+                gender: "FEMALE",
+                file: "https://event-tickethub-files.s3.us-east-1.amazonaws.com/5224695a5e285345d899bfb836e1464efc13fe7fab7ff6ddb68493815a51aea8",
+                obs: null,
+              },
+            ],
+          },
+          {
+            id: "ddab6326-67d0-41d8-a029-3e0f48231485",
+            name: "Lote 1",
+            startTime: "2025-04-08T23:35:03.737Z",
+            endTime: "2025-04-09T01:00:03.737Z",
+            tickets: [
+              {
+                sectorId: "7aa30869-f34f-460c-b1e7-d74f5863c6cb",
+                price: 500,
+                quantity: 5,
+                gender: "MALE",
+                file: "https://event-tickethub-files.s3.us-east-1.amazonaws.com/1f2d448171fe942a943cae88c18a5b5d61332b6330698f33f0df590494a56c1f",
+                obs: "Mauris vitae quam in justo dictum sodales. In eget tortor a nunc vehicula tempor.",
+              },
+            ],
+          },
+        ],
+      },
+    ],
   },
 ];
 
-export const Events = () => {
+export const NextEvents = () => {
   const [imageLoading, setImageLoading] = useState<Record<string, boolean>>({});
 
   const handleImageLoad = (id: string) => {
@@ -119,17 +199,37 @@ export const Events = () => {
 
   return (
     <section className="py-10 px-4 md:px-10">
-      <h2 className="text-3xl font-bold mb-6">Próximos eventos</h2>
+      <h2 className="text-3xl font-bold mb-6 text-primary">Próximos eventos</h2>
       <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
         {events.map((event) => {
           const ref = useRef(null);
           const isInView = useInView(ref, { once: true, margin: "-50px" });
 
-          const formattedDate = format(
-            new Date(event.date),
-            "dd 'de' MMMM 'às' HH:mm'h'",
-            { locale: ptBR }
-          );
+          let formattedDate = "";
+
+          if (event.days && event.days.length > 0) {
+            const validDays = event.days.filter((d) => d?.date);
+
+            if (validDays.length > 0) {
+              const firstDay = validDays[0];
+              const lastDay = validDays[validDays.length - 1];
+
+              const startDate = format(new Date(firstDay.date), "dd/MM");
+              const endDate = format(new Date(lastDay.date), "dd/MM");
+
+              formattedDate =
+                startDate === endDate ? startDate : `${startDate} - ${endDate}`;
+            } else {
+              // fallback se não tiver data válida
+              formattedDate = "Data a definir";
+            }
+          } else {
+            formattedDate = format(
+              new Date(event.date),
+              "dd 'de' MMMM 'às' HH:mm'h'",
+              { locale: ptBR }
+            );
+          }
 
           const location =
             event.mode === "ONLINE" ? "Online" : `${event.city}, ${event.uf}`;
@@ -141,7 +241,7 @@ export const Events = () => {
               initial={{ opacity: 0, y: 30 }}
               animate={isInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.6, ease: "easeOut" }}>
-              <Card className="overflow-hidden rounded-xl shadow-md hover:shadow-lg transition-shadow pt-0 h-[320px] flex flex-col">
+              <Card className="overflow-hidden shadow-md cursor-pointer hover:shadow-xl transition-shadow duration-200 pt-0 h-[320px] flex flex-col">
                 <div className="relative w-full h-36 shrink-0">
                   <Image
                     src={event.image}

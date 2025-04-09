@@ -95,7 +95,7 @@ export const CreateProducerEventForm = () => {
       uf: "",
       description: "",
       categoryId: "",
-      mode: "",
+      mode: "IN_PERSON",
       image: undefined,
       map: undefined,
       days: [
@@ -151,17 +151,22 @@ export const CreateProducerEventForm = () => {
 
   const handleNextStep = async () => {
     let fieldsToValidate: (keyof FormData)[] = [];
+    const mode = form.watch("mode");
+
+    const shouldSkipStep2 = mode !== "IN_PERSON";
+    const nextStep = step === 1 && shouldSkipStep2 ? 3 : step + 1;
 
     switch (step) {
       case 1:
         fieldsToValidate = ["title", "categoryId", "mode", "description"];
         break;
       case 2:
-        fieldsToValidate = ["city", "province", "address", "uf"];
+        if (mode === "IN_PERSON") {
+          fieldsToValidate = ["city", "province", "address", "uf"];
+        }
         break;
       case 3:
         fieldsToValidate = ["days"];
-
         const allTicketsHaveFile = form
           .getValues("days")
           .every((day) =>
@@ -169,7 +174,6 @@ export const CreateProducerEventForm = () => {
               batch.tickets.every((ticket) => !!ticket.file)
             )
           );
-
         if (!allTicketsHaveFile) {
           toast.error("Todos os ingressos devem ter um arquivo associado.");
           return;
@@ -180,15 +184,19 @@ export const CreateProducerEventForm = () => {
     const isStepValid = await form.trigger(fieldsToValidate);
 
     if (isStepValid && step < totalSteps) {
-      setStep(step + 1);
+      setStep(nextStep);
     } else {
       toast.error("Preencha todos os campos obrigatórios antes de avançar.");
     }
   };
 
   const handlePrevStep = () => {
+    const mode = form.watch("mode");
+    const shouldSkipStep2 = mode !== "IN_PERSON";
+    const prevStep = step === 3 && shouldSkipStep2 ? 1 : step - 1;
+
     if (step > 1) {
-      setStep(step - 1);
+      setStep(prevStep);
     }
   };
 
@@ -752,9 +760,14 @@ export const CreateProducerEventForm = () => {
                       </div>
                       <div>
                         <p className="text-gray-500">Local:</p>
-                        <p className="font-medium">
-                          {form.watch("city")}, {form.watch("province")}
-                        </p>
+                        {form.watch("mode") === "IN_PERSON" ? (
+                          <p className="font-medium">
+                            {form.watch("city")}, {form.watch("province")} -{" "}
+                            {form.watch("uf")}
+                          </p>
+                        ) : (
+                          <p className="font-medium">Evento Online</p>
+                        )}
                       </div>
                     </div>
 

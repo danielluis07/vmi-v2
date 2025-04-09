@@ -67,15 +67,19 @@ export const batchesSchema = z.object({
   ),
 });
 
-export const createProducerEventSchema = z.object({
+// Producer event schemas
+
+// create
+
+export const baseProducerEventSchema = z.object({
   title: z.string().min(1, "O título é obrigatório"),
   description: z.string().min(1, "A descrição é obrigatória"),
-  address: z.string().min(1, "O Endereço é obrigatório"),
-  province: z.string().min(1, "O Bairro é obrigatório"),
   categoryId: z.string().min(1, "A Categoria é obrigatória"),
   mode: z.string().min(1, "O tipo é obrigatório"),
-  city: z.string().min(1, "A Cidade é obrigatória"),
-  uf: z.string().min(1, "O estado é obrigatório"),
+  address: z.string(),
+  province: z.string(),
+  city: z.string(),
+  uf: z.string(),
   image: z.union([
     z.instanceof(File).refine((file) => file instanceof File, {
       message: "A imagem do evento é obrigatória",
@@ -126,18 +130,123 @@ export const createProducerEventSchema = z.object({
   ),
 });
 
-export const updateProducerEventSchema = createProducerEventSchema.extend({
-  id: z.string().min(1, "O ID do evento é obrigatório"),
+const onlineProducerEventSchema = baseProducerEventSchema.extend({
+  mode: z.literal("IN_PERSON"),
+  address: z.string().min(1, "O endereço é obrigatório"),
+  province: z.string().min(1, "A província é obrigatória"),
+  city: z.string().min(1, "A cidade é obrigatória"),
+  uf: z.string().min(1, "O UF é obrigatório"),
 });
 
-export const createUserEventSchema = z.object({
+const inPersonProducerEventSchema = baseProducerEventSchema.extend({
+  mode: z.literal("ONLINE"),
+  address: z.string().optional(),
+  province: z.string().optional(),
+  city: z.string().optional(),
+  uf: z.string().optional(),
+});
+
+export const createProducerEventSchema = z.discriminatedUnion("mode", [
+  onlineProducerEventSchema,
+  inPersonProducerEventSchema,
+]);
+
+// update
+
+export const baseUpdateProducerEventSchema = z.object({
+  id: z.string().min(1, "O ID do evento é obrigatório"),
   title: z.string().min(1, "O título é obrigatório"),
   description: z.string().min(1, "A descrição é obrigatória"),
-  address: z.string().min(1, "O Endereço é obrigatório"),
-  province: z.string().min(1, "O Bairro é obrigatório"),
   categoryId: z.string().min(1, "A Categoria é obrigatória"),
   mode: z.string().min(1, "O tipo é obrigatório"),
-  city: z.string().min(1, "A Cidade é obrigatória"),
+  address: z.string(),
+  province: z.string(),
+  city: z.string(),
+  uf: z.string(),
+  image: z.union([
+    z.instanceof(File).refine((file) => file instanceof File, {
+      message: "A imagem do evento é obrigatória",
+    }),
+    z.string().url(),
+  ]),
+  map: z.union([z.instanceof(File), z.string().url(), z.null()]).optional(),
+  days: z.array(
+    z.object({
+      batches: z.array(batchesSchema),
+      date: z.preprocess(
+        (val) => {
+          if (typeof val === "string" || val instanceof Date) {
+            return new Date(val);
+          }
+          return undefined;
+        },
+        z.date({
+          required_error: "A data é obrigatória",
+          invalid_type_error: "Data inválida",
+        })
+      ),
+      startTime: z.preprocess(
+        (val) => {
+          if (typeof val === "string" || val instanceof Date) {
+            return new Date(val);
+          }
+          return undefined;
+        },
+        z.date({
+          required_error: "O horário de início é obrigatório",
+          invalid_type_error: "Horário de início inválido",
+        })
+      ),
+      endTime: z.preprocess(
+        (val) => {
+          if (typeof val === "string" || val instanceof Date) {
+            return new Date(val);
+          }
+          return undefined;
+        },
+        z.date({
+          required_error: "O horário de término é obrigatório",
+          invalid_type_error: "Horário de término inválido",
+        })
+      ),
+    })
+  ),
+});
+
+const updateOnlineProducerEventSchema = baseUpdateProducerEventSchema.extend({
+  mode: z.literal("IN_PERSON"),
+  address: z.string().min(1, "O endereço é obrigatório"),
+  province: z.string().min(1, "A província é obrigatória"),
+  city: z.string().min(1, "A cidade é obrigatória"),
+  uf: z.string().min(1, "O UF é obrigatório"),
+});
+
+const updateInPersonProducerEventSchema = baseUpdateProducerEventSchema.extend({
+  mode: z.literal("ONLINE"),
+  address: z.string().optional(),
+  province: z.string().optional(),
+  city: z.string().optional(),
+  uf: z.string().optional(),
+});
+
+export const updateProducerEventSchema = z.discriminatedUnion("mode", [
+  updateOnlineProducerEventSchema,
+  updateInPersonProducerEventSchema,
+]);
+
+// User event schemas
+
+// create
+
+export const baseUserEventSchema = z.object({
+  title: z.string().min(1, "O título é obrigatório"),
+  description: z.string().min(1, "A descrição é obrigatória"),
+  categoryId: z.string().min(1, "A Categoria é obrigatória"),
+  mode: z.string().min(1, "O tipo é obrigatório"),
+  address: z.string(),
+  province: z.string(),
+  city: z.string(),
+  uf: z.string(),
   date: z.preprocess(
     (val) => {
       if (typeof val === "string" || val instanceof Date) {
@@ -150,7 +259,6 @@ export const createUserEventSchema = z.object({
       invalid_type_error: "Data inválida",
     })
   ),
-  uf: z.string().min(1, "O estado é obrigatório"),
   image: z.union([
     z.instanceof(File).refine((file) => file instanceof File, {
       message: "A imagem do evento é obrigatória",
@@ -169,6 +277,86 @@ export const createUserEventSchema = z.object({
   }),
 });
 
-export const updateUserEventSchema = createUserEventSchema.extend({
-  id: z.string().min(1, "O ID do evento é obrigatório"),
+const onlineUserEventSchema = baseUserEventSchema.extend({
+  mode: z.literal("IN_PERSON"),
+  address: z.string().min(1, "O endereço é obrigatório"),
+  province: z.string().min(1, "A província é obrigatória"),
+  city: z.string().min(1, "A cidade é obrigatória"),
+  uf: z.string().min(1, "O UF é obrigatório"),
 });
+
+const inPersonUserEventSchema = baseUserEventSchema.extend({
+  mode: z.literal("ONLINE"),
+  address: z.string().optional(),
+  province: z.string().optional(),
+  city: z.string().optional(),
+  uf: z.string().optional(),
+});
+
+export const createUserEventSchema = z.discriminatedUnion("mode", [
+  onlineUserEventSchema,
+  inPersonUserEventSchema,
+]);
+
+// update
+
+export const baseUpdateUserEventSchema = z.object({
+  id: z.string().min(1, "O ID do evento é obrigatório"),
+  title: z.string().min(1, "O título é obrigatório"),
+  description: z.string().min(1, "A descrição é obrigatória"),
+  categoryId: z.string().min(1, "A Categoria é obrigatória"),
+  mode: z.string().min(1, "O tipo é obrigatório"),
+  address: z.string(),
+  province: z.string(),
+  city: z.string(),
+  uf: z.string(),
+  date: z.preprocess(
+    (val) => {
+      if (typeof val === "string" || val instanceof Date) {
+        return new Date(val);
+      }
+      return undefined;
+    },
+    z.date({
+      required_error: "A data é obrigatória",
+      invalid_type_error: "Data inválida",
+    })
+  ),
+  image: z.union([
+    z.instanceof(File).refine((file) => file instanceof File, {
+      message: "A imagem do evento é obrigatória",
+    }),
+    z.string().url(),
+  ]),
+  ticket: z.object({
+    id: z.string().optional(),
+    sectorId: z.string().min(1, "O setor é obrigatório"),
+    price: z.number().min(1, "O preço é obrigatório"),
+    quantity: z.number().min(1, "A quantidade é obrigatória"),
+    gender: z.string().min(1, "O gênero é obrigatório"),
+    obs: z.string().optional(),
+    isNominal: z.boolean(),
+    file: z.union([z.instanceof(File), z.string().url()]),
+  }),
+});
+
+const updateOnlineUserEventSchema = baseUpdateUserEventSchema.extend({
+  mode: z.literal("IN_PERSON"),
+  address: z.string().min(1, "O endereço é obrigatório"),
+  province: z.string().min(1, "A província é obrigatória"),
+  city: z.string().min(1, "A cidade é obrigatória"),
+  uf: z.string().min(1, "O UF é obrigatório"),
+});
+
+const updateInPersonUserEventSchema = baseUpdateUserEventSchema.extend({
+  mode: z.literal("ONLINE"),
+  address: z.string().optional(),
+  province: z.string().optional(),
+  city: z.string().optional(),
+  uf: z.string().optional(),
+});
+
+export const updateUserEventSchema = z.discriminatedUnion("mode", [
+  updateOnlineUserEventSchema,
+  updateInPersonUserEventSchema,
+]);
