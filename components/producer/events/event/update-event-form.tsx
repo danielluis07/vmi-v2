@@ -138,6 +138,8 @@ export const UpdateProducerEventForm = ({ eventId }: { eventId: string }) => {
     toast.error("Você deve preencher todos os campos obrigatórios");
   };
 
+  const mode = form.watch("mode");
+
   const onSubmit = async (values: FormData) => {
     setIsLoading(true);
     const uploadPromises = [];
@@ -347,88 +349,91 @@ export const UpdateProducerEventForm = ({ eventId }: { eventId: string }) => {
             />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <FormField
-              control={form.control}
-              name="city"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cidade</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Cidade"
-                      {...field}
-                      value={field.value || ""}
-                      required
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="address"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Endereço</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Endereço"
-                      {...field}
-                      value={field.value || ""}
-                      required
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="province"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Bairro</FormLabel>
-                  <FormControl>
-                    <Input
-                      placeholder="Bairro"
-                      {...field}
-                      value={field.value || ""}
-                      required
-                    />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name="uf"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Estado</FormLabel>
-                  <Select
-                    onValueChange={field.onChange}
-                    defaultValue={field.value}>
+          {mode === "IN_PERSON" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <FormField
+                control={form.control}
+                name="city"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Cidade</FormLabel>
                     <FormControl>
-                      <SelectTrigger className="w-full">
-                        <SelectValue placeholder="Selecione uma categoria" />
-                      </SelectTrigger>
+                      <Input
+                        placeholder="Cidade"
+                        {...field}
+                        value={field.value || ""}
+                        required={mode === "IN_PERSON"}
+                      />
                     </FormControl>
-                    <SelectContent>
-                      {states.map((state, i) => (
-                        <SelectItem key={i} value={state}>
-                          {state}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="address"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Endereço</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Endereço"
+                        {...field}
+                        value={field.value || ""}
+                        required={mode === "IN_PERSON"}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="province"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Bairro</FormLabel>
+                    <FormControl>
+                      <Input
+                        placeholder="Bairro"
+                        {...field}
+                        value={field.value || ""}
+                        required={mode === "IN_PERSON"}
+                      />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+              <FormField
+                control={form.control}
+                name="uf"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Estado</FormLabel>
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      required={mode === "IN_PERSON"}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Selecione uma categoria" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {states.map((state, i) => (
+                          <SelectItem key={i} value={state}>
+                            {state}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            </div>
+          )}
 
           <ScrollArea className="border rounded-md p-2 h-[500px] mt-10">
             <h1 className="text-2xl font-bold text-center mb-5">

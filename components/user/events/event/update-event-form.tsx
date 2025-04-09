@@ -91,6 +91,8 @@ export const UpdateUserEventForm = ({ eventId }: { eventId: string }) => {
 
   const router = useRouter();
 
+  const mode = form.watch("mode");
+
   const update = trpc.userEvents.update.useMutation({
     onSuccess: (input) => {
       utils.userEvents.getOne.refetch({ id: input.eventId });
@@ -315,100 +317,103 @@ export const UpdateUserEventForm = ({ eventId }: { eventId: string }) => {
 
           <Separator className="my-4" />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="w-full">
-              <FormField
-                control={form.control}
-                name="city"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Cidade</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoading}
-                        placeholder="Cidade"
-                        {...field}
-                        value={field.value || ""}
-                        required
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="w-full">
-              <FormField
-                control={form.control}
-                name="address"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Endereço</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoading}
-                        placeholder="Endereço"
-                        {...field}
-                        value={field.value || ""}
-                        required
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="w-full">
-              <FormField
-                control={form.control}
-                name="province"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Bairro</FormLabel>
-                    <FormControl>
-                      <Input
-                        disabled={isLoading}
-                        placeholder="Bairro"
-                        {...field}
-                        value={field.value || ""}
-                        required
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-            <div className="w-full">
-              <FormField
-                control={form.control}
-                name="uf"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Estado</FormLabel>
-                    <Select
-                      disabled={isLoading}
-                      onValueChange={field.onChange}
-                      defaultValue={field.value}>
+          {mode === "IN_PERSON" && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="w-full">
+                <FormField
+                  control={form.control}
+                  name="city"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Cidade</FormLabel>
                       <FormControl>
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Selecione um estado" />
-                        </SelectTrigger>
+                        <Input
+                          disabled={isLoading}
+                          placeholder="Cidade"
+                          {...field}
+                          value={field.value || ""}
+                          required={mode === "IN_PERSON"}
+                        />
                       </FormControl>
-                      <SelectContent>
-                        {states.map((state, i) => (
-                          <SelectItem key={i} value={state}>
-                            {state}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="w-full">
+                <FormField
+                  control={form.control}
+                  name="address"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Endereço</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={isLoading}
+                          placeholder="Endereço"
+                          {...field}
+                          value={field.value || ""}
+                          required={mode === "IN_PERSON"}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="w-full">
+                <FormField
+                  control={form.control}
+                  name="province"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bairro</FormLabel>
+                      <FormControl>
+                        <Input
+                          disabled={isLoading}
+                          placeholder="Bairro"
+                          {...field}
+                          value={field.value || ""}
+                          required={mode === "IN_PERSON"}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div className="w-full">
+                <FormField
+                  control={form.control}
+                  name="uf"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Estado</FormLabel>
+                      <Select
+                        disabled={isLoading}
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                        required={mode === "IN_PERSON"}>
+                        <FormControl>
+                          <SelectTrigger className="w-full">
+                            <SelectValue placeholder="Selecione um estado" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {states.map((state, i) => (
+                            <SelectItem key={i} value={state}>
+                              {state}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
             </div>
-          </div>
+          )}
 
           <Separator className="my-4" />
 

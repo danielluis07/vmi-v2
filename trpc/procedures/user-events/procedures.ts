@@ -1,17 +1,27 @@
 import { z } from "zod";
 import { db } from "@/db/drizzle";
-import {
-  events,
-  producerEvents,
-  eventDays,
-  batches,
-  tickets,
-} from "@/db/schema";
+import { events, tickets } from "@/db/schema";
 import { createUserEventSchema, updateUserEventSchema } from "@/schemas";
 import { protectedProcedure, createTRPCRouter } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
 import { deleteFromS3 } from "@/lib/s3-upload";
 import { and, desc, eq } from "drizzle-orm";
+import { generateSlug } from "@/lib/utils";
+
+type UpdatedUserEventData = {
+  title: string;
+  description: string | null;
+  image: string;
+  status: "ACTIVE" | "INACTIVE" | "ENDED";
+  mode: "ONLINE" | "IN_PERSON";
+  city: string | null;
+  province: string | null;
+  address: string | null;
+  categoryId: string;
+  uf: string | null;
+  date: Date;
+  slug?: string;
+};
 
 export const userEventsRouter = createTRPCRouter({
   create: protectedProcedure
@@ -25,6 +35,8 @@ export const userEventsRouter = createTRPCRouter({
           message: "Usuário não autenticado",
         });
       }
+
+      const slug = generateSlug(input.title);
 
       const uploadedFiles: string[] = [];
 
@@ -53,6 +65,7 @@ export const userEventsRouter = createTRPCRouter({
               categoryId: input.categoryId,
               uf: input.uf || null,
               date: input.date,
+              slug: slug,
               organizerId: userId,
               creatorRole: "USER",
             })
@@ -84,7 +97,6 @@ export const userEventsRouter = createTRPCRouter({
       } catch (error) {
         console.error("Erro ao criar evento:", error);
 
-        // Delete all uploaded files from S3
         for (const fileName of uploadedFiles) {
           const { success, message } = await deleteFromS3(fileName);
           if (!success) {
@@ -166,25 +178,32 @@ export const userEventsRouter = createTRPCRouter({
         if (newTicketFileName) uploadedFiles.push(newTicketFileName);
       }
 
+      const updatedData: UpdatedUserEventData = {
+        title: input.title,
+        description: input.description || null,
+        image: input.image as string,
+        status: "ACTIVE",
+        mode: input.mode,
+        city: input.city || null,
+        province: input.province || null,
+        address: input.address || null,
+        categoryId: input.categoryId,
+        uf: input.uf || null,
+        date: input.date,
+      };
+
+      // Add slug if title changed
+      if (input.title !== existingEvent.title) {
+        updatedData.slug = generateSlug(input.title);
+      }
+
       try {
         // Usando transação
         await db.transaction(async (tx) => {
           // Atualizar evento
           await tx
             .update(events)
-            .set({
-              title: input.title,
-              description: input.description || null,
-              image: input.image as string,
-              status: "ACTIVE",
-              mode: input.mode as "ONLINE" | "IN_PERSON",
-              city: input.city || null,
-              province: input.province || null,
-              address: input.address || null,
-              categoryId: input.categoryId,
-              uf: input.uf || null,
-              date: input.date,
-            })
+            .set(updatedData)
             .where(eq(events.id, input.id));
 
           // Atualizar ticket (exemplo, ajuste conforme seus campos)

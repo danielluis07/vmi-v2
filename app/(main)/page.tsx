@@ -209,7 +209,7 @@ export default function Home() {
   return (
     <div>
       <Hero />
-      <div className="px-0 sm:px-3 md:px-10 lg:px-20">
+      <div className="px-0 sm:px-3 md:px-10 lg:px-20 xl:px-42">
         <Categories data={dummyCategories} />
         <FeaturedEvents data={events} />
         <NextEvents />

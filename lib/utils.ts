@@ -89,6 +89,18 @@ export const getFormattedDateTime = (
   return format(finalDateTime, "HH:mm", { locale: ptBR });
 };
 
+export const generateSlug = (title: string): string => {
+  return title
+    .normalize("NFD") // Normaliza para decompor os caracteres acentuados
+    .replace(/[\u0300-\u036f]/g, "") // Remove os acentos
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, "-") // Substitui espaços por hífens
+    .replace(/[^\w\-]+/g, "") // Remove caracteres não alfanuméricos (exceto hífens)
+    .replace(/-+/g, "-") // Substitui hífens consecutivos por um único hífen
+    .replace(/^-+|-+$/g, ""); // Remove hífens no início e no final
+};
+
 export const states = [
   "Acre",
   "Alagoas",

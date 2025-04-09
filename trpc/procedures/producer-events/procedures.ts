@@ -15,12 +15,30 @@ import { protectedProcedure, createTRPCRouter } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
 import { deleteFromS3 } from "@/lib/s3-upload";
 import { and, desc, eq } from "drizzle-orm";
+import { generateSlug } from "@/lib/utils";
+
+type UpdatedProducerEventData = {
+  title: string;
+  description: string | null;
+  image: string;
+  status: "ACTIVE" | "INACTIVE" | "ENDED";
+  mode: "ONLINE" | "IN_PERSON";
+  city: string | null;
+  province: string | null;
+  address: string | null;
+  categoryId: string;
+  map: string | null;
+  uf: string | null;
+  slug?: string;
+};
 
 export const producerEventsRouter = createTRPCRouter({
   create: protectedProcedure
     .input(createProducerEventSchema)
     .mutation(async ({ ctx, input }) => {
       const { userId } = ctx;
+
+      const slug = generateSlug(input.title);
 
       const uploadedFiles: string[] = [];
 
@@ -65,6 +83,7 @@ export const producerEventsRouter = createTRPCRouter({
               uf: input.uf || null,
               date: null,
               organizerId: userId,
+              slug: slug,
               creatorRole: "PRODUCER",
             })
             .returning({ id: events.id });
@@ -203,24 +222,30 @@ export const producerEventsRouter = createTRPCRouter({
         .from(tickets)
         .where(eq(tickets.eventId, input.id));
 
+      const updatedData: UpdatedProducerEventData = {
+        title: input.title,
+        description: input.description || null,
+        image: image,
+        status: "ACTIVE",
+        mode: input.mode,
+        city: input.city || null,
+        province: input.province || null,
+        address: input.address || null,
+        categoryId: input.categoryId,
+        map: map || null,
+        uf: input.uf || null,
+      };
+
+      if (input.title !== existingEvent.title) {
+        updatedData.slug = generateSlug(input.title);
+      }
+
       try {
         return await db.transaction(async (tx) => {
           // Atualizar o evento
           await tx
             .update(events)
-            .set({
-              title: input.title,
-              description: input.description || null,
-              image: image,
-              status: "ACTIVE",
-              mode: input.mode as "ONLINE" | "IN_PERSON",
-              city: input.city || null,
-              province: input.province || null,
-              address: input.address || null,
-              categoryId: input.categoryId,
-              map: map || null,
-              uf: input.uf || null,
-            })
+            .set(updatedData)
             .where(
               and(eq(events.id, input.id), eq(events.organizerId, userId))
             );

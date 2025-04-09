@@ -141,6 +141,7 @@ export const events = pgTable("events", {
   uf: text("uf"),
   date: timestamp("date", { withTimezone: true }),
   map: text("map"),
+  slug: text("slug"),
   creatorRole: eventCreatorRole("creator_role"),
   organizerId: text("organizer_id").references(() => users.id, {
     onDelete: "cascade",
