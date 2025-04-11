@@ -1,7 +1,7 @@
 "use client";
 
 import { z } from "zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createUserEventSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { FieldErrors, useFieldArray, useForm } from "react-hook-form";
@@ -77,6 +77,7 @@ export const CreateUserEventForm = () => {
 
   const { step, setStep, image, imagePreviewUrl, setImage, clearImage } =
     useMultiStepFormStore();
+
   const form = useForm<FormData>({
     resolver: zodResolver(createUserEventSchema),
     defaultValues: {
@@ -231,6 +232,10 @@ export const CreateUserEventForm = () => {
       console.error(error);
     }
   };
+
+  useEffect(() => {
+    setStep(1);
+  }, []);
 
   return (
     <div className="w-full flex">

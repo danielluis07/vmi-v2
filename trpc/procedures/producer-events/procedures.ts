@@ -14,7 +14,7 @@ import {
 import { protectedProcedure, createTRPCRouter } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
 import { deleteFromS3 } from "@/lib/s3-upload";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, ne } from "drizzle-orm";
 import { generateSlug } from "@/lib/utils";
 
 type UpdatedProducerEventData = {
@@ -32,13 +32,56 @@ type UpdatedProducerEventData = {
   slug?: string;
 };
 
+const generateUniqueSlug = async (title: string): Promise<string> => {
+  let baseSlug = generateSlug(title); // Sua função existente
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (true) {
+    const [existingEvent] = await db
+      .select({ id: events.id })
+      .from(events)
+      .where(eq(events.slug, slug));
+
+    if (!existingEvent) {
+      return slug;
+    }
+
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+};
+
+const generateUpdatedSlug = async (
+  title: string,
+  currentEventId: string
+): Promise<string> => {
+  let baseSlug = generateSlug(title);
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (true) {
+    const [existingSlug] = await db
+      .select({ id: events.id })
+      .from(events)
+      .where(and(eq(events.slug, slug), ne(events.id, currentEventId)));
+
+    if (!existingSlug) {
+      return slug; // Slug está livre
+    }
+
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+};
+
 export const producerEventsRouter = createTRPCRouter({
   create: protectedProcedure
     .input(createProducerEventSchema)
     .mutation(async ({ ctx, input }) => {
       const { userId } = ctx;
 
-      const slug = generateSlug(input.title);
+      const slug = await generateUniqueSlug(input.title);
 
       const uploadedFiles: string[] = [];
 
@@ -237,7 +280,7 @@ export const producerEventsRouter = createTRPCRouter({
       };
 
       if (input.title !== existingEvent.title) {
-        updatedData.slug = generateSlug(input.title);
+        updatedData.slug = await generateUpdatedSlug(input.title, input.id);
       }
 
       try {

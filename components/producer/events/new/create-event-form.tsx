@@ -1,7 +1,7 @@
 "use client";
 
 import { z } from "zod";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { createProducerEventSchema } from "@/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import {
@@ -271,6 +271,10 @@ export const CreateProducerEventForm = () => {
     control,
     name: "days",
   });
+
+  useEffect(() => {
+    setStep(1);
+  }, []);
 
   return (
     <div className="w-full flex">

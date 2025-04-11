@@ -5,6 +5,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { TRPCProvider } from "@/trpc/client";
 import { ReactScan } from "@/components/react-scan-component";
 import { Navbar } from "@/components/navbar";
+import { Footer } from "@/components/footer";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -23,13 +24,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <ReactScan />
+      {/* <ReactScan /> */}
       <body className={`${inter.variable} antialiased max-w-[1536px] mx-auto`}>
         <Navbar />
         <TRPCProvider>
           <Toaster />
           {children}
         </TRPCProvider>
+        <Footer />
       </body>
     </html>
   );

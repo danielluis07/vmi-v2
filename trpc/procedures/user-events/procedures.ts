@@ -5,7 +5,7 @@ import { createUserEventSchema, updateUserEventSchema } from "@/schemas";
 import { protectedProcedure, createTRPCRouter } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
 import { deleteFromS3 } from "@/lib/s3-upload";
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, ne } from "drizzle-orm";
 import { generateSlug } from "@/lib/utils";
 
 type UpdatedUserEventData = {
@@ -23,6 +23,49 @@ type UpdatedUserEventData = {
   slug?: string;
 };
 
+const generateUniqueSlug = async (title: string): Promise<string> => {
+  let baseSlug = generateSlug(title); // Sua função existente
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (true) {
+    const [existingEvent] = await db
+      .select({ id: events.id })
+      .from(events)
+      .where(eq(events.slug, slug));
+
+    if (!existingEvent) {
+      return slug;
+    }
+
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+};
+
+const generateUpdatedSlug = async (
+  title: string,
+  currentEventId: string
+): Promise<string> => {
+  let baseSlug = generateSlug(title);
+  let slug = baseSlug;
+  let counter = 1;
+
+  while (true) {
+    const [existingSlug] = await db
+      .select({ id: events.id })
+      .from(events)
+      .where(and(eq(events.slug, slug), ne(events.id, currentEventId)));
+
+    if (!existingSlug) {
+      return slug; // Slug está livre
+    }
+
+    slug = `${baseSlug}-${counter}`;
+    counter++;
+  }
+};
+
 export const userEventsRouter = createTRPCRouter({
   create: protectedProcedure
     .input(createUserEventSchema)
@@ -36,7 +79,7 @@ export const userEventsRouter = createTRPCRouter({
         });
       }
 
-      const slug = generateSlug(input.title);
+      const slug = await generateUniqueSlug(input.title);
 
       const uploadedFiles: string[] = [];
 
@@ -192,9 +235,9 @@ export const userEventsRouter = createTRPCRouter({
         date: input.date,
       };
 
-      // Add slug if title changed
+      // Adicionar slug se o título mudou
       if (input.title !== existingEvent.title) {
-        updatedData.slug = generateSlug(input.title);
+        updatedData.slug = await generateUpdatedSlug(input.title, input.id);
       }
 
       try {
