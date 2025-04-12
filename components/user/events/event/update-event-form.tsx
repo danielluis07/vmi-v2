@@ -37,6 +37,8 @@ import { DropzoneOptions } from "react-dropzone";
 import { Switch } from "@/components/ui/switch";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useConfirm } from "@/providers/confirm-provider";
 
 type FormData = z.infer<typeof updateUserEventSchema>;
 
@@ -45,9 +47,45 @@ export const UpdateUserEventForm = ({ eventId }: { eventId: string }) => {
   const [event] = trpc.userEvents.getOne.useSuspenseQuery({ id: eventId });
   const [categories] = trpc.categories.getMany.useSuspenseQuery();
   const [ticketSectors] = trpc.ticketSectors.getMany.useSuspenseQuery();
+  const deleteEvent = trpc.userEvents.delete.useMutation({
+    onSuccess: () => {
+      utils.userEvents.getMany.refetch();
+      router.push("/user/events");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
   const utils = trpc.useUtils();
 
   const { image } = useMultiStepFormStore();
+
+  const { confirm, closeConfirm, setPending } = useConfirm();
+
+  const handleDelete = async (id: string) => {
+    const confirmed = await confirm(
+      "Tem certeza?",
+      "Você está prestes a deletar esse evento"
+    );
+
+    if (confirmed) {
+      setPending(true);
+
+      deleteEvent.mutate(
+        { id },
+        {
+          onSuccess: () => {
+            setPending(false);
+            closeConfirm();
+          },
+          onError: () => {
+            setPending(false);
+            closeConfirm();
+          },
+        }
+      );
+    }
+  };
 
   const eventModes = [
     { label: "Local", value: "IN_PERSON" },
@@ -65,6 +103,7 @@ export const UpdateUserEventForm = ({ eventId }: { eventId: string }) => {
       uf: event.uf || "",
       description: event.description || "",
       categoryId: event.categoryId,
+      status: event.status,
       mode: event.mode,
       date: event.date || undefined,
       image: event.image,
@@ -151,11 +190,53 @@ export const UpdateUserEventForm = ({ eventId }: { eventId: string }) => {
   };
 
   return (
-    <div className="w-full mb-8">
+    <div className="w-full mb-8 px-14">
+      <h1 className="text-2xl font-bold mb-3">Atualizar Evento</h1>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit, onInvalid)}
           className="h-full flex flex-col gap-y-3">
+          <div className="flex items-center justify-between w-full">
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem className="rounded-lg border p-3 shadow-sm">
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex gap-4">
+                      <FormItem className="flex items-center space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="ACTIVE" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Ativo</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="INACTIVE" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Inativo</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isLoading}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleDelete(event.id);
+              }}>
+              Deletar
+            </Button>
+          </div>
           <FormField
             control={form.control}
             name="image"
@@ -190,7 +271,6 @@ export const UpdateUserEventForm = ({ eventId }: { eventId: string }) => {
               );
             }}
           />
-
           <div className="flex items-center justify-between gap-x-4">
             <div className="w-full">
               <FormField

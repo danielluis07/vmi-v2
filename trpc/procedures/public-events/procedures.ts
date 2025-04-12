@@ -1,12 +1,19 @@
 import { z } from "zod";
 import { db } from "@/db/drizzle";
-import { events, eventDays, batches, tickets, categories } from "@/db/schema";
+import {
+  events,
+  eventDays,
+  batches,
+  tickets,
+  categories,
+  ticketSectors,
+} from "@/db/schema";
 import { baseProcedure, createTRPCRouter } from "@/trpc/init";
 import { TRPCError } from "@trpc/server";
 import { eq } from "drizzle-orm";
 
 export const publicEventsRouter = createTRPCRouter({
-  getOne: baseProcedure
+  getBySlug: baseProcedure
     .input(z.object({ slug: z.string() }))
     .query(async ({ input }) => {
       if (!input.slug) {
@@ -68,14 +75,17 @@ export const publicEventsRouter = createTRPCRouter({
             batchesData.map(async (batch) => {
               const ticketsData = await db
                 .select({
-                  sectorId: tickets.sectorId,
+                  sector: ticketSectors.name,
                   price: tickets.price,
                   quantity: tickets.quantity,
                   gender: tickets.gender,
-                  file: tickets.file,
                   obs: tickets.obs,
                 })
                 .from(tickets)
+                .innerJoin(
+                  ticketSectors,
+                  eq(tickets.sectorId, ticketSectors.id)
+                )
                 .where(eq(tickets.batchId, batch.id));
 
               return { ...batch, tickets: ticketsData };

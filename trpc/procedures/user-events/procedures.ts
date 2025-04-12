@@ -225,7 +225,7 @@ export const userEventsRouter = createTRPCRouter({
         title: input.title,
         description: input.description || null,
         image: input.image as string,
-        status: "ACTIVE",
+        status: input.status,
         mode: input.mode,
         city: input.city || null,
         province: input.province || null,

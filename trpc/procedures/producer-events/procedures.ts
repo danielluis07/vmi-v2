@@ -269,7 +269,7 @@ export const producerEventsRouter = createTRPCRouter({
         title: input.title,
         description: input.description || null,
         image: image,
-        status: "ACTIVE",
+        status: input.status,
         mode: input.mode,
         city: input.city || null,
         province: input.province || null,

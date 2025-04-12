@@ -45,6 +45,8 @@ import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import Link from "next/link";
 import { useState } from "react";
+import { useConfirm } from "@/providers/confirm-provider";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
 type FormData = z.infer<typeof updateProducerEventSchema>;
 
@@ -53,6 +55,15 @@ export const UpdateProducerEventForm = ({ eventId }: { eventId: string }) => {
   const [event] = trpc.producerEvents.getOne.useSuspenseQuery({ id: eventId });
   const [categories] = trpc.categories.getMany.useSuspenseQuery();
   const [ticketSectors] = trpc.ticketSectors.getMany.useSuspenseQuery();
+  const deleteEvent = trpc.producerEvents.delete.useMutation({
+    onSuccess: () => {
+      utils.producerEvents.getMany.refetch();
+      router.push("/user/events");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
   const utils = trpc.useUtils();
 
   const update = trpc.producerEvents.update.useMutation({
@@ -69,7 +80,7 @@ export const UpdateProducerEventForm = ({ eventId }: { eventId: string }) => {
     },
   });
 
-  console.log(event);
+  const { confirm, closeConfirm, setPending } = useConfirm();
 
   const form = useForm<FormData>({
     resolver: zodResolver(updateProducerEventSchema),
@@ -83,6 +94,7 @@ export const UpdateProducerEventForm = ({ eventId }: { eventId: string }) => {
       description: event.description || "",
       categoryId: event.categoryId,
       mode: event.mode,
+      status: event.status,
       image: event.image,
       map: event.map,
       days: event.days.map((day) => ({
@@ -107,6 +119,31 @@ export const UpdateProducerEventForm = ({ eventId }: { eventId: string }) => {
   });
 
   const router = useRouter();
+
+  const handleDelete = async (id: string) => {
+    const confirmed = await confirm(
+      "Tem certeza?",
+      "Você está prestes a deletar esse evento"
+    );
+
+    if (confirmed) {
+      setPending(true);
+
+      deleteEvent.mutate(
+        { id },
+        {
+          onSuccess: () => {
+            setPending(false);
+            closeConfirm();
+          },
+          onError: () => {
+            setPending(false);
+            closeConfirm();
+          },
+        }
+      );
+    }
+  };
 
   const eventModes = [
     { label: "Local", value: "IN_PERSON" },
@@ -209,11 +246,53 @@ export const UpdateProducerEventForm = ({ eventId }: { eventId: string }) => {
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full mb-8 px-14">
+      <h1 className="text-2xl font-bold mb-3">Atualizar Evento</h1>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit, onInvalid)}
           className="h-full flex flex-col gap-y-3">
+          <div className="flex items-center justify-between w-full">
+            <FormField
+              control={form.control}
+              name="status"
+              render={({ field }) => (
+                <FormItem className="rounded-lg border p-3 shadow-sm">
+                  <FormControl>
+                    <RadioGroup
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                      className="flex gap-4">
+                      <FormItem className="flex items-center space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="ACTIVE" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Ativo</FormLabel>
+                      </FormItem>
+                      <FormItem className="flex items-center space-y-0">
+                        <FormControl>
+                          <RadioGroupItem value="INACTIVE" />
+                        </FormControl>
+                        <FormLabel className="font-normal">Inativo</FormLabel>
+                      </FormItem>
+                    </RadioGroup>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <Button
+              type="button"
+              variant="destructive"
+              disabled={isLoading}
+              onClick={(e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                handleDelete(event.id);
+              }}>
+              Deletar
+            </Button>
+          </div>
           <FormField
             control={form.control}
             name="image"
@@ -572,6 +651,7 @@ export const UpdateProducerEventForm = ({ eventId }: { eventId: string }) => {
                 <BatchesFieldArray
                   control={control}
                   dayIndex={dayIndex}
+                  isLoading={isLoading}
                   ticketSectors={ticketSectors}
                 />
               </div>
@@ -634,9 +714,11 @@ const BatchesFieldArray = ({
   control,
   dayIndex,
   ticketSectors,
+  isLoading,
 }: {
   control: Control<FormData>;
   dayIndex: number;
+  isLoading: boolean;
   ticketSectors: {
     id: string;
     name: string;
@@ -717,6 +799,7 @@ const BatchesFieldArray = ({
               <Button
                 type="button"
                 variant="destructive"
+                disabled={isLoading}
                 className="mt-5"
                 onClick={() => removeBatch(batchIndex)}>
                 Remover Lote

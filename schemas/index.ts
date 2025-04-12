@@ -163,6 +163,7 @@ export const baseUpdateProducerEventSchema = z.object({
   province: z.string(),
   city: z.string(),
   uf: z.string(),
+  status: z.enum(["ACTIVE", "INACTIVE", "ENDED"]),
   image: z.union([
     z.instanceof(File).refine((file) => file instanceof File, {
       message: "A imagem do evento é obrigatória",
@@ -307,6 +308,7 @@ export const baseUpdateUserEventSchema = z.object({
   categoryId: z.string().min(1, "A Categoria é obrigatória"),
   mode: z.string().min(1, "O tipo é obrigatório"),
   address: z.string(),
+  status: z.enum(["ACTIVE", "INACTIVE", "ENDED"]),
   province: z.string(),
   city: z.string(),
   uf: z.string(),

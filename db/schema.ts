@@ -133,7 +133,7 @@ export const events = pgTable("events", {
   title: text("title").notNull(),
   description: text("description"),
   image: text("image").notNull(),
-  status: eventStatus("status"),
+  status: eventStatus("status").notNull(),
   mode: eventMode("mode").notNull(),
   city: text("city"),
   province: text("province"),

@@ -802,8 +802,7 @@ const DateTimePicker = React.forwardRef<
 
     const initHourFormat = {
       hour24:
-        displayFormat?.hour24 ??
-        `PPP${granularity !== "day" ? " HH:mm:ss" : ""}`,
+        displayFormat?.hour24 ?? `PPP${granularity !== "day" ? " HH:mm" : ""}`,
       hour12:
         displayFormat?.hour12 ??
         `PP${granularity !== "day" ? " hh:mm:ss b" : ""}`,
