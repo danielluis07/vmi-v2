@@ -27,6 +27,25 @@ export const signInSchema = z.object({
   password: z.string().nonempty("Campo obrigatório"),
 });
 
+export const updateUserSchema = z.object({
+  name: z.string().optional(),
+  email: z.string().optional(),
+  cpfCnpj: z.string().optional(),
+  phone: z.string().optional(),
+});
+
+export const updatePasswordSchema = z
+  .object({
+    password: z.string().min(8, "A senha deve ter pelo menos 8 caracteres"),
+    repeat_password: z
+      .string()
+      .min(8, "A senha deve ter pelo menos 8 caracteres"),
+  })
+  .refine((data) => data.password === data.repeat_password, {
+    message: "As senhas não coincidem",
+    path: ["repeat_password"],
+  });
+
 export const batchesSchema = z.object({
   name: z.string().min(1, "O nome é obrigatório"),
   startTime: z.preprocess(

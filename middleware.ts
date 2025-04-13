@@ -11,17 +11,25 @@ export async function middleware(request: NextRequest) {
   const pathname = request.nextUrl.pathname;
   const role = session.user.role;
 
-  if (pathname.startsWith("/user") && role !== "USER") {
-    return NextResponse.redirect(new URL("/producer", request.url));
-  }
+  const routeAccess = {
+    USER: /^\/user(\/|$)/,
+    PRODUCER: /^\/producer(\/|$)/,
+    ADMIN: /^\/admin(\/|$)/,
+  };
 
-  if (pathname.startsWith("/producer") && role !== "PRODUCER") {
-    return NextResponse.redirect(new URL("/user", request.url));
+  if (
+    (role === "USER" && !routeAccess.USER.test(pathname)) ||
+    (role === "PRODUCER" && !routeAccess.PRODUCER.test(pathname)) ||
+    (role === "ADMIN" && !routeAccess.ADMIN.test(pathname))
+  ) {
+    const redirectPath =
+      role === "USER" ? "/user" : role === "PRODUCER" ? "/producer" : "/admin";
+    return NextResponse.redirect(new URL(redirectPath, request.url));
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/user/:path*", "/producer/:path*"],
+  matcher: ["/user/:path*", "/producer/:path*", "/admin/:path*"],
 };

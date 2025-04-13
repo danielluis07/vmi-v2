@@ -33,6 +33,7 @@ import { useRouter } from "next/navigation";
 type FormData = z.infer<typeof signUpSchema>;
 
 export const SignUpForm = () => {
+  const { signUp, getSession } = authClient;
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
   const form = useForm<FormData>({
@@ -53,7 +54,7 @@ export const SignUpForm = () => {
 
   const onSubmit = async (values: FormData) => {
     const cleanCpfCnpj = removeFormatting(values.cpfCnpj);
-    await authClient.signUp.email(
+    await signUp.email(
       {
         email: values.email, // user email address
         password: values.password, // user password -> min 8 characters by default
@@ -65,8 +66,16 @@ export const SignUpForm = () => {
         onRequest: () => {
           setLoading(true);
         },
-        onSuccess: () => {
-          router.push("/user");
+        onSuccess: async () => {
+          const session = await getSession();
+
+          if (!session.data?.user) {
+            toast.error("Usuário não encontrado");
+            setLoading(false);
+            return;
+          }
+
+          router.push(`/${session.data.user.role.toLowerCase()}`);
         },
         onError: (ctx) => {
           // display the error message

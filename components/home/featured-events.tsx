@@ -74,9 +74,9 @@ export const FeaturedEvents = ({
           className="w-full px-12 py-2">
           <CarouselContent className="-ml-3 py-2">
             {isLoading &&
-              Array.from({ length: 14 }).map((_, index) => (
+              Array.from({ length: 6 }).map((_, index) => (
                 <CarouselItem key={index} className="pl-3 basis-auto">
-                  <Skeleton className="rounded-lg px-3 py-1" />
+                  <Skeleton className="rounded-lg h-[300px] w-[350px]" />
                 </CarouselItem>
               ))}
             {!isLoading &&
@@ -156,8 +156,8 @@ export const FeaturedEvents = ({
                 );
               })}
           </CarouselContent>
-          <CarouselPrevious className="left-0 z-20" />
-          <CarouselNext className="right-0 z-20" />
+          <CarouselPrevious className="left-0 z-20 hidden sm:flex" />
+          <CarouselNext className="right-0 z-20 hidden sm:flex" />
         </Carousel>
       </div>
     </div>

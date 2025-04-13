@@ -1,6 +1,6 @@
 "use client";
 
-import { Home, Inbox, Settings } from "lucide-react";
+import { Calendar, Home, Inbox, Search, Settings } from "lucide-react";
 
 import {
   Sidebar,
@@ -14,23 +14,48 @@ import {
   SidebarMenuItem,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { NavUser } from "@/components/user/sidebar/nav-user";
+import { NavAdmin } from "@/components/admin/sidebar/nav-admin";
 import Link from "next/link";
 
 const items = [
   {
     title: "Eventos",
-    url: "/user/events",
+    url: "#",
     icon: Home,
   },
   {
-    title: "Configurações",
-    url: "/user/settings",
+    title: "Relatórios",
+    url: "#",
+    icon: Inbox,
+  },
+  {
+    title: "Email Marketing",
+    url: "#",
+    icon: Calendar,
+  },
+  {
+    title: "Impulsionar",
+    url: "#",
+    icon: Search,
+  },
+  {
+    title: "Scanner",
+    url: "#",
+    icon: Settings,
+  },
+  {
+    title: "Financeiro",
+    url: "#",
+    icon: Settings,
+  },
+  {
+    title: "Ajustes",
+    url: "#",
     icon: Settings,
   },
 ];
 
-export const UserSidebar = () => {
+export const AdminSidebar = () => {
   return (
     <Sidebar collapsible="icon">
       <SidebarHeader>
@@ -56,7 +81,7 @@ export const UserSidebar = () => {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser />
+        <NavAdmin />
       </SidebarFooter>
     </Sidebar>
   );

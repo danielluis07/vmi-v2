@@ -55,6 +55,9 @@ export const users = pgTable("user", {
   cpfCnpj: varchar("cpf_cnpj", { length: 255 }),
   phone: varchar("phone", { length: 255 }),
   role: userRole("role"),
+  mpAccessToken: text("mp_access_token"),
+  mpUserId: text("mp_user_id"),
+  mpPublicKey: text("mp_public_key"),
   createdAt: timestamp("created_at").notNull(),
   updatedAt: timestamp("updated_at").notNull(),
 });

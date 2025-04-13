@@ -9,6 +9,7 @@ import { Calendar, MapPin } from "lucide-react";
 import { useRef, useState } from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const events = [
   {
@@ -194,7 +195,7 @@ const events = [
   },
 ];
 
-export const NextEvents = () => {
+export const NextEvents = ({ isLoading }: { isLoading: boolean }) => {
   const [imageLoading, setImageLoading] = useState<Record<string, boolean>>({});
 
   const handleImageLoad = (id: string) => {
@@ -209,93 +210,102 @@ export const NextEvents = () => {
 
   return (
     <section className="py-10 px-4 md:px-10">
-      <h2 className="text-3xl font-bold mb-6 text-primary">Próximos eventos</h2>
-      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-        {events.map((event) => {
-          const ref = useRef(null);
-          const isInView = useInView(ref, { once: true, margin: "-50px" });
+      <h2 className="text-3xl font-bold mb-6 text-primary text-center sm:text-start">
+        Próximos eventos
+      </h2>
+      <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {isLoading &&
+          Array.from({ length: 8 }).map((_, index) => (
+            <Skeleton key={index} className="w-[230px] h-[320px]" />
+          ))}
+        {!isLoading &&
+          events.map((event) => {
+            const ref = useRef(null);
+            const isInView = useInView(ref, { once: true, margin: "-50px" });
 
-          let formattedDate = "";
+            let formattedDate = "";
 
-          if (event.days && event.days.length > 0) {
-            const validDays = event.days.filter((d) => d?.date);
+            if (event.days && event.days.length > 0) {
+              const validDays = event.days.filter((d) => d?.date);
 
-            if (validDays.length > 0) {
-              const firstDay = validDays[0];
-              const lastDay = validDays[validDays.length - 1];
+              if (validDays.length > 0) {
+                const firstDay = validDays[0];
+                const lastDay = validDays[validDays.length - 1];
 
-              const startDate = format(new Date(firstDay.date), "dd/MM");
-              const endDate = format(new Date(lastDay.date), "dd/MM");
+                const startDate = format(new Date(firstDay.date), "dd/MM");
+                const endDate = format(new Date(lastDay.date), "dd/MM");
 
-              formattedDate =
-                startDate === endDate ? startDate : `${startDate} - ${endDate}`;
+                formattedDate =
+                  startDate === endDate
+                    ? startDate
+                    : `${startDate} - ${endDate}`;
+              } else {
+                // fallback se não tiver data válida
+                formattedDate = "Data a definir";
+              }
             } else {
-              // fallback se não tiver data válida
-              formattedDate = "Data a definir";
+              formattedDate = format(
+                new Date(event.date),
+                "dd 'de' MMMM 'às' HH:mm'h'",
+                { locale: ptBR }
+              );
             }
-          } else {
-            formattedDate = format(
-              new Date(event.date),
-              "dd 'de' MMMM 'às' HH:mm'h'",
-              { locale: ptBR }
-            );
-          }
 
-          const location =
-            event.mode === "ONLINE" ? "Online" : `${event.city}, ${event.uf}`;
+            const location =
+              event.mode === "ONLINE" ? "Online" : `${event.city}, ${event.uf}`;
 
-          return (
-            <motion.div
-              key={event.id}
-              ref={ref}
-              initial={{ opacity: 0, y: 30 }}
-              animate={isInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.6, ease: "easeOut" }}>
-              <Link href={`/event/${event.slug}`}>
-                <Card className="overflow-hidden shadow-md cursor-pointer hover:shadow-xl transition-shadow duration-200 pt-0 h-[320px] flex flex-col">
-                  <div className="relative w-full h-36 shrink-0">
-                    <Image
-                      src={event.image}
-                      alt={event.title}
-                      fill
-                      className={cn(
-                        imageLoading[event.id] === false
-                          ? "opacity-100"
-                          : "opacity-0",
-                        "object-cover transition-opacity duration-300"
-                      )}
-                      loading="lazy"
-                      onLoad={() => handleImageLoad(event.id)}
-                      sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-                      blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIyNSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjFmMWYxIi8+PC9zdmc+"
-                    />
-                  </div>
-                  <CardContent className="px-3 flex flex-col justify-between flex-1 space-y-2">
-                    <div className="space-y-1">
-                      <h3 className="text-md leading-4 font-semibold line-clamp-2 min-h-[44px]">
-                        {event.title}
-                      </h3>
-
-                      <div className="flex items-center text-xs text-muted-foreground gap-1">
-                        <Calendar size={14} className="mr-1 text-primary" />
-                        {formattedDate}
-                      </div>
-
-                      <div className="flex items-center text-xs text-muted-foreground gap-1">
-                        <MapPin size={14} className="mr-1 text-secondary" />
-                        {location}
-                      </div>
+            return (
+              <motion.div
+                key={event.id}
+                ref={ref}
+                initial={{ opacity: 0, y: 30 }}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.6, ease: "easeOut" }}>
+                <Link href={`/event/${event.slug}`}>
+                  <Card className="overflow-hidden shadow-md cursor-pointer hover:shadow-xl transition-shadow duration-200 pt-0 w-80 mx-auto sm:w-full h-[320px] flex flex-col">
+                    <div className="relative w-full h-36 shrink-0">
+                      <Image
+                        src={event.image}
+                        alt={event.title}
+                        fill
+                        className={cn(
+                          imageLoading[event.id] === false
+                            ? "opacity-100"
+                            : "opacity-0",
+                          "object-cover transition-opacity duration-300"
+                        )}
+                        loading="lazy"
+                        onLoad={() => handleImageLoad(event.id)}
+                        sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                        blurDataURL="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjIyNSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjFmMWYxIi8+PC9zdmc+"
+                      />
                     </div>
+                    <CardContent className="px-3 flex flex-col justify-between flex-1 space-y-2">
+                      <div className="space-y-1">
+                        <h3 className="text-md leading-4 font-semibold line-clamp-2 min-h-[44px]">
+                          {event.title}
+                        </h3>
 
-                    <p className="text-muted-foreground text-xs line-clamp-2 mt-1 min-h-[32px]">
-                      {event.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
-            </motion.div>
-          );
-        })}
+                        <div className="flex items-center text-xs text-muted-foreground gap-1">
+                          <Calendar size={14} className="mr-1 text-primary" />
+                          {formattedDate}
+                        </div>
+
+                        <div className="flex items-center text-xs text-muted-foreground gap-1">
+                          <MapPin size={14} className="mr-1 text-secondary" />
+                          {location}
+                        </div>
+                      </div>
+
+                      <p className="text-muted-foreground text-xs line-clamp-2 mt-1 min-h-[32px]">
+                        {event.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </Link>
+              </motion.div>
+            );
+          })}
       </div>
     </section>
   );

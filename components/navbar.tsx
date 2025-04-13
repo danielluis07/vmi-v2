@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
+import { MobileMenu } from "./mobile-menu";
 
 export const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
@@ -48,6 +49,9 @@ export const Navbar = () => {
           </div>
         </Link>
 
+        <nav className="md:hidden">
+          <MobileMenu />
+        </nav>
         <nav className="hidden md:flex items-center gap-4 text-sm font-medium text-muted-foreground">
           <Link href="/auth/sign-in">
             <Button>Entrar</Button>

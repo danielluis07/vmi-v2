@@ -56,9 +56,11 @@ export const Categories = ({
         className="w-full px-12 py-2">
         <CarouselContent className="-ml-3">
           {isLoading &&
-            Array.from({ length: 14 }).map((_, index) => (
+            Array.from({ length: 20 }).map((_, index) => (
               <CarouselItem key={index} className="pl-3 basis-auto">
-                <Skeleton className="rounded-lg px-3 py-1" />
+                <Skeleton className="rounded-lg px-3 py-2 w-[100px] whitespace-nowrap">
+                  &nbsp;
+                </Skeleton>
               </CarouselItem>
             ))}
           {!isLoading &&
