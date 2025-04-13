@@ -54,6 +54,7 @@ export const usersRouter = createTRPCRouter({
         email: users.email,
         cpfCnpj: users.cpfCnpj,
         phone: users.phone,
+        mpUserId: users.mpUserId,
       })
       .from(users)
       .where(eq(users.id, userId));

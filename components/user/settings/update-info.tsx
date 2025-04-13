@@ -37,6 +37,7 @@ export const UpdateInfo = ({
     email: string;
     cpfCnpj: string | null;
     phone: string | null;
+    mpUserId: string | null;
   };
 }) => {
   const update = trpc.users.update.useMutation({

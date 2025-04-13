@@ -9,7 +9,7 @@ export const SettingsClient = () => {
   const [user] = trpc.users.getOne.useSuspenseQuery();
   return (
     <div className="w-full">
-      <ConnectMercadoPago />
+      <ConnectMercadoPago user={user} />
       <div className="flex flex-col md:flex-row md:justify-between gap-4 mt-8">
         <UpdateInfo user={user} />
         <UpdatePassword />
