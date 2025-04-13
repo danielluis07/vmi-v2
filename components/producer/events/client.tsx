@@ -14,11 +14,11 @@ import { toast } from "sonner";
 
 export const ProducerEventsClient = () => {
   const [imageLoading, setImageLoading] = useState<Record<string, boolean>>({});
-  const [producerEvents] = trpc.producerEvents.getMany.useSuspenseQuery();
+  const [events] = trpc.events.getMany.useSuspenseQuery();
   const utils = trpc.useUtils();
-  const deleteEvent = trpc.producerEvents.delete.useMutation({
+  const deleteEvent = trpc.events.deleteProducerEvent.useMutation({
     onSuccess: () => {
-      utils.producerEvents.getMany.invalidate();
+      utils.events.getMany.invalidate();
       toast.success("Evento excluído com sucesso!");
     },
     onError: (error) => {
@@ -76,12 +76,12 @@ export const ProducerEventsClient = () => {
     <div className="w-full">
       <div
         className={cn(
-          producerEvents.length > 0 && "flex justify-between items-center",
+          events.length > 0 && "flex justify-between items-center",
           "mb-6"
         )}>
         <h1 className="text-3xl font-bold text-secondary">Meus Eventos</h1>
 
-        {producerEvents.length > 0 && (
+        {events.length > 0 && (
           <Link
             href="/producer/events/new"
             className="inline-flex items-center">
@@ -92,9 +92,9 @@ export const ProducerEventsClient = () => {
           </Link>
         )}
       </div>
-      {producerEvents.length > 0 && (
+      {events.length > 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {producerEvents.map((event) => (
+          {events.map((event) => (
             <Link href={`/producer/events/${event.id}`} key={event.id}>
               <Card className="h-[360px] overflow-hidden hover:shadow-lg transition-shadow duration-300 pt-0 group">
                 <div className="relative w-full pt-[56.25%]">
@@ -156,7 +156,7 @@ export const ProducerEventsClient = () => {
         </div>
       )}
 
-      {producerEvents.length === 0 && (
+      {events.length === 0 && (
         <div className="flex flex-col items-center justify-center h-[400px]">
           <Calendar className="size-16 text-gray-300 mb-4" />
           <h3 className="text-xl font-medium text-gray-900 dark:text-gray-100">

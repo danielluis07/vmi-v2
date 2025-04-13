@@ -14,11 +14,11 @@ import { toast } from "sonner";
 
 export const UserEventsClient = () => {
   const [imageLoading, setImageLoading] = useState<Record<string, boolean>>({});
-  const [userEvents] = trpc.userEvents.getMany.useSuspenseQuery();
+  const [userEvents] = trpc.events.getMany.useSuspenseQuery();
   const utils = trpc.useUtils();
-  const deleteEvent = trpc.userEvents.delete.useMutation({
+  const deleteEvent = trpc.events.deleteUserEvent.useMutation({
     onSuccess: () => {
-      utils.userEvents.getMany.invalidate();
+      utils.events.getMany.invalidate();
       toast.success("Evento excluído com sucesso!");
     },
     onError: (error) => {

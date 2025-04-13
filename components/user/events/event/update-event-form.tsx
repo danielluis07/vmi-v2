@@ -44,12 +44,12 @@ type FormData = z.infer<typeof updateUserEventSchema>;
 
 export const UpdateUserEventForm = ({ eventId }: { eventId: string }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [event] = trpc.userEvents.getOne.useSuspenseQuery({ id: eventId });
+  const [event] = trpc.events.getUserEvent.useSuspenseQuery({ id: eventId });
   const [categories] = trpc.categories.getMany.useSuspenseQuery();
   const [ticketSectors] = trpc.ticketSectors.getMany.useSuspenseQuery();
-  const deleteEvent = trpc.userEvents.delete.useMutation({
+  const deleteEvent = trpc.events.deleteUserEvent.useMutation({
     onSuccess: () => {
-      utils.userEvents.getMany.refetch();
+      utils.events.getMany.refetch();
       router.push("/user/events");
     },
     onError: (error) => {
@@ -132,10 +132,10 @@ export const UpdateUserEventForm = ({ eventId }: { eventId: string }) => {
 
   const mode = form.watch("mode");
 
-  const update = trpc.userEvents.update.useMutation({
+  const update = trpc.events.updateUserEvent.useMutation({
     onSuccess: (input) => {
-      utils.userEvents.getOne.refetch({ id: input.eventId });
-      utils.userEvents.getMany.refetch();
+      utils.events.getUserEvent.refetch({ id: input.eventId });
+      utils.events.getMany.refetch();
       toast.success("Evento atualizado com sucesso!");
       setIsLoading(false);
       router.push("/user/events");

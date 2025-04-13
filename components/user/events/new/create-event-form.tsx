@@ -112,9 +112,9 @@ export const CreateUserEventForm = () => {
     maxSize: 1024 * 1024 * 5,
   } satisfies DropzoneOptions;
 
-  const create = trpc.userEvents.create.useMutation({
+  const create = trpc.events.createUserEvent.useMutation({
     onSuccess: () => {
-      utils.userEvents.getMany.refetch();
+      utils.events.getMany.refetch();
       toast.success("Evento criado com sucesso!");
       setIsLoading(false);
       router.push("/user/events");

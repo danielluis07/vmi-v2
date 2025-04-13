@@ -134,9 +134,9 @@ export const CreateProducerEventForm = () => {
     maxSize: 1024 * 1024 * 5,
   } satisfies DropzoneOptions;
 
-  const create = trpc.producerEvents.create.useMutation({
+  const create = trpc.events.createProducerEvent.useMutation({
     onSuccess: () => {
-      utils.producerEvents.getMany.refetch();
+      utils.events.getMany.refetch();
       toast.success("Evento criado com sucesso!");
       setIsLoading(false);
       router.push("/producer/events");

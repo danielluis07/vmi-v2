@@ -11,7 +11,7 @@ const EventPage = async ({
   params: Promise<{ eventId: string }>;
 }) => {
   const { eventId } = await params;
-  void trpc.producerEvents.getOne.prefetch({ id: eventId });
+  void trpc.events.getProducerEvent.prefetch({ id: eventId });
   void trpc.categories.getMany.prefetch();
   void trpc.ticketSectors.getMany.prefetch();
 

@@ -52,12 +52,14 @@ type FormData = z.infer<typeof updateProducerEventSchema>;
 
 export const UpdateProducerEventForm = ({ eventId }: { eventId: string }) => {
   const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [event] = trpc.producerEvents.getOne.useSuspenseQuery({ id: eventId });
+  const [event] = trpc.events.getProducerEvent.useSuspenseQuery({
+    id: eventId,
+  });
   const [categories] = trpc.categories.getMany.useSuspenseQuery();
   const [ticketSectors] = trpc.ticketSectors.getMany.useSuspenseQuery();
-  const deleteEvent = trpc.producerEvents.delete.useMutation({
+  const deleteEvent = trpc.events.deleteProducerEvent.useMutation({
     onSuccess: () => {
-      utils.producerEvents.getMany.refetch();
+      utils.events.getMany.refetch();
       router.push("/user/events");
     },
     onError: (error) => {
@@ -66,10 +68,10 @@ export const UpdateProducerEventForm = ({ eventId }: { eventId: string }) => {
   });
   const utils = trpc.useUtils();
 
-  const update = trpc.producerEvents.update.useMutation({
+  const update = trpc.events.updateProducerEvent.useMutation({
     onSuccess: (input) => {
-      utils.producerEvents.getOne.refetch({ id: input.eventId });
-      utils.producerEvents.getMany.refetch();
+      utils.events.getProducerEvent.refetch({ id: input.eventId });
+      utils.events.getMany.refetch();
       setIsLoading(false);
       toast.success("Evento atualizado com sucesso!");
       router.push("/producer/events");

@@ -6,7 +6,7 @@ import { ErrorBoundary } from "react-error-boundary";
 export const dynamic = "force-dynamic";
 
 const CreateEventPage = async () => {
-  void trpc.userEvents.getMany.prefetch();
+  void trpc.events.getMany.prefetch();
   return (
     <HydrateClient>
       <Suspense fallback={<div>Loading...</div>}>
