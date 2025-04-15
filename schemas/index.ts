@@ -27,6 +27,11 @@ export const signInSchema = z.object({
   password: z.string().nonempty("Campo obrigatório"),
 });
 
+export const checkoutSchema = z.object({
+  name: z.string().nonempty("Campo obrigatório"),
+  email: z.string().nonempty("Campo obrigatório"),
+});
+
 export const updateUserSchema = z.object({
   name: z.string().optional(),
   email: z.string().optional(),

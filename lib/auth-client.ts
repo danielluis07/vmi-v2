@@ -7,6 +7,8 @@ export const authClient = createAuthClient({
   plugins: [inferAdditionalFields<typeof auth>()],
 });
 
+export type Session = typeof authClient.$Infer.Session;
+
 type ErrorTypes = Partial<
   Record<
     keyof typeof authClient.$ERROR_CODES,

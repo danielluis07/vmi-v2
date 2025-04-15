@@ -27,3 +27,29 @@ type UpdatedUserEventData = {
   date: Date;
   slug?: string;
 };
+
+type CheckoutTicket = {
+  ticketId: string;
+  eventId: string;
+  day?: string;
+  batchId?: string;
+  sectorName?: string;
+  sectorId: string;
+  gender?: string;
+  price: number;
+  quantity: number;
+};
+
+type CheckoutStore = {
+  tickets: CheckoutTicket[];
+  addTicket: (ticket: CheckoutTicket) => void;
+  removeTicket: (index: number) => void;
+  reset: () => void;
+};
+
+type CheckoutPayment = {
+  userId: string | undefined;
+  email: string;
+  name: string;
+  tickets: CheckoutTicket[];
+};

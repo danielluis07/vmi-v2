@@ -101,6 +101,10 @@ export const generateSlug = (title: string): string => {
     .replace(/^-+|-+$/g, ""); // Remove hífens no início e no final
 };
 
+export const capitalizeFirstLetter = (str: string) => {
+  return str.charAt(0).toUpperCase() + str.slice(1);
+};
+
 export const states = [
   "Acre",
   "Alagoas",

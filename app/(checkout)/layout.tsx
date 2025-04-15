@@ -24,14 +24,11 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      {/* <ReactScan /> */}
       <body className={`${inter.variable} antialiased max-w-[1536px] mx-auto`}>
-        <Navbar />
         <TRPCProvider>
           <Toaster />
           {children}
         </TRPCProvider>
-        <Footer />
       </body>
     </html>
   );

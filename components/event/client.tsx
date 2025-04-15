@@ -8,11 +8,15 @@ import { CalendarDays, MapPin, Video } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { formatCurrency } from "@/lib/utils";
+import { capitalizeFirstLetter, formatCurrency } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
+import { useCheckoutStore } from "@/stores/use-checkout-data";
 import Link from "next/link";
 
 import { Tag, DollarSign, Info, User } from "lucide-react";
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 type Data = {
   id: string;
@@ -27,8 +31,15 @@ type Data = {
   address?: string;
   province?: string;
   ticket: {
+    id: string;
+    eventId: string;
+    sectorId: string;
+    sector: string; // name of the sector
     price: number;
     quantity: number;
+    gender: string;
+    file: string;
+    obs: string | null;
   };
   days?: Array<{
     date: string;
@@ -40,7 +51,10 @@ type Data = {
       startTime: string;
       endTime: string;
       tickets: Array<{
-        sector: string;
+        id: string;
+        eventId: string;
+        sectorId: string;
+        sector: string; // name of the sector
         price: number;
         quantity: number;
         gender: string;
@@ -60,20 +74,112 @@ const formatDate = (date: Date) => {
   }
 };
 
-const capitalizeFirstLetter = (str: string) => {
-  return str.charAt(0).toUpperCase() + str.slice(1);
-};
-
 export const EventClient = ({ data }: { data: Data }) => {
+  const router = useRouter();
+
   const dateObject =
     typeof data.date === "string" ? new Date(data.date) : data.date;
-  const formattedDate = formatDate(dateObject);
 
-  const formattedPrice = formatCurrency(data.ticket.price);
   const locationString =
     data.mode === "IN_PERSON"
       ? [data.address, data.city, data.uf].filter(Boolean).join(", ")
       : "Evento Online";
+
+  const [ticketQuantities, setTicketQuantities] = useState<{
+    [key: string]: number;
+  }>({});
+
+  const [singleTicketQuantity, setSingleTicketQuantity] = useState<number>(1);
+
+  const { addTicket, reset } = useCheckoutStore();
+
+  const getTicketKey = (dayIndex: number, batchId: string, ticketId: string) =>
+    `${dayIndex}-${batchId}-${ticketId}`;
+
+  const calculateDaysTotal = () => {
+    let total = 0;
+    data.days?.forEach((day, dayIndex) => {
+      day.batches.forEach((batch) => {
+        batch.tickets.forEach((ticket) => {
+          const key = getTicketKey(dayIndex, batch.id, ticket.id);
+          const quantity = ticketQuantities[key] || 0;
+          total += ticket.price * quantity;
+        });
+      });
+    });
+    return total;
+  };
+
+  const calculateSingleTicketTotal = () => {
+    return data.ticket ? data.ticket.price * singleTicketQuantity : 0;
+  };
+
+  const calculateTotal = () => {
+    return data.days && data.days.length > 0
+      ? calculateDaysTotal()
+      : calculateSingleTicketTotal();
+  };
+
+  const handleDaysCheckout = () => {
+    let addedTickets = 0;
+    data?.days?.forEach((day, dayIndex) => {
+      day.batches.forEach((batch) => {
+        batch.tickets.forEach((ticket) => {
+          const key = getTicketKey(dayIndex, batch.id, ticket.id);
+          const quantity = ticketQuantities[key] || 0;
+          if (quantity > 0) {
+            addTicket({
+              ticketId: ticket.id,
+              eventId: data.id,
+              day: batch.startTime,
+              batchId: batch.id,
+              sectorName: ticket.sector,
+              sectorId: ticket.sectorId,
+              gender: ticket.gender,
+              price: ticket.price,
+              quantity,
+            });
+            addedTickets++;
+          }
+        });
+      });
+    });
+    if (addedTickets > 0) {
+      router.push("/checkout");
+    } else {
+      toast.error("Selecione pelo menos um ingresso para continuar.");
+    }
+  };
+
+  const handleSingleTicketCheckout = () => {
+    if (data.ticket && singleTicketQuantity > 0) {
+      addTicket({
+        ticketId: data.ticket.id,
+        eventId: data.id,
+        day: data.date.toString(),
+        sectorName: data.ticket.sector,
+        sectorId: data.ticket.sectorId,
+        gender: data.ticket.gender,
+        price: data.ticket.price,
+        quantity: singleTicketQuantity,
+      });
+    }
+    router.push("/checkout");
+  };
+
+  const handleCheckout = () => {
+    if (data.creatorRole === "PRODUCER") {
+      handleDaysCheckout();
+    } else if (data.creatorRole === "USER") {
+      handleSingleTicketCheckout();
+    }
+  };
+
+  useEffect(() => {
+    setTicketQuantities({});
+    reset();
+    useCheckoutStore.persist.clearStorage();
+  }, []);
 
   return (
     <div className="w-full">
@@ -104,7 +210,7 @@ export const EventClient = ({ data }: { data: Data }) => {
               />{" "}
               <div>
                 <p className="font-semibold text-gray-800">Data e Hora</p>
-                <p className="text-sm">{formattedDate}</p>{" "}
+                <p className="text-sm">{formatDate(dateObject)}</p>{" "}
               </div>
             </div>
             <div className="flex items-start space-x-3 text-gray-700">
@@ -139,18 +245,40 @@ export const EventClient = ({ data }: { data: Data }) => {
               </div>
             </div>
             <div className="flex items-center text-gray-700">
-              <div className="flex flex-col items-start space-y-2">
+              <div className="flex flex-col items-start h-24">
                 {data.creatorRole === "USER" ? (
                   <div className="flex items-center gap-x-3">
-                    <span className="text-3xl font-bold">{formattedPrice}</span>
-                    <Input min={1} type="number" className="w-20 text-center" />
+                    <span className="text-3xl font-bold">
+                      {formatCurrency(calculateTotal())}
+                    </span>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={data.ticket.quantity}
+                      value={singleTicketQuantity}
+                      onChange={(e) => {
+                        const value = Math.min(
+                          Number(e.target.value),
+                          data.ticket.quantity
+                        );
+                        setSingleTicketQuantity(value >= 0 ? value : 0);
+                      }}
+                      className="w-full md:w-20 text-center"
+                    />
                   </div>
                 ) : (
                   <div className="flex items-center gap-x-3">
-                    <span className="text-3xl font-bold">{formattedPrice}</span>
+                    <span className="text-3xl font-bold">
+                      {formatCurrency(calculateTotal())}
+                    </span>
                   </div>
                 )}
-                <Button className="w-full">Comprar</Button>
+                <Button
+                  variant="secondary"
+                  onClick={handleCheckout}
+                  className="w-44 mt-4">
+                  Comprar
+                </Button>
               </div>
             </div>
           </div>
@@ -247,10 +375,28 @@ export const EventClient = ({ data }: { data: Data }) => {
 
                                 <Input
                                   type="number"
-                                  min={1}
-                                  value={1}
-                                  onChange={(e) => {}}
+                                  min={0}
                                   max={ticket.quantity}
+                                  value={
+                                    ticketQuantities[
+                                      getTicketKey(index, batch.id, ticket.id)
+                                    ] || 0
+                                  }
+                                  onChange={(e) => {
+                                    const key = getTicketKey(
+                                      index,
+                                      batch.id,
+                                      ticket.id
+                                    );
+                                    const value = Math.min(
+                                      Number(e.target.value),
+                                      ticket.quantity
+                                    );
+                                    setTicketQuantities((prev) => ({
+                                      ...prev,
+                                      [key]: value >= 0 ? value : 0,
+                                    }));
+                                  }}
                                   className="w-full md:w-20 text-center"
                                 />
                               </div>
